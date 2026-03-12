@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: proyecto-web
-  namespace: mi-ns      # namespace asignado por el profe. TODO
+  namespace: TU_NAMESPACE #uno se c rea el namespace?¡?
 spec:
   replicas: 2
   selector:
@@ -14,10 +14,10 @@ spec:
         app: proyecto-web
     spec:
       imagePullSecrets:
-      - name: ghcr-secret   # el profe crea este secret con tu token
+      - name: ghcr-secret #secret del profesor creado con el token
       containers:
       - name: proyecto-web
-        image: ghcr.io/TU_USUARIO_GITHUB/TU_REPO:latest
+        image: ghcr.io/advsnts/proyecto_web:latest
         ports:
         - containerPort: 8080
 ---
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: proyecto-web
-  namespace: mi-ns
+  namespace: TU_NAMESPACE #se crea el namespace
 spec:
   selector:
     app: proyecto-web
@@ -38,11 +38,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: proyecto-web
-  namespace: mi-ns
+  namespace: TU_NAMESPACE
 spec:
   ingressClassName: public
   rules:
-  - host: TUGRUPO.inphotech.co
+  - host: grupo11.inphotech.co
     http:
       paths:
       - path: /

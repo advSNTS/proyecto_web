@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest   # runner servidor profesor
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout código
@@ -32,15 +32,12 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}  # token automático de GitHub
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Construir y subir imagen Docker
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
         run: |
-          docker build -t ghcr.io/${{ github.repository }}:latest .
-          docker push ghcr.io/${{ github.repository }}:latest
-
-      - name: Construir y subir imagen Docker
-        run: |
-          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}:latest" | tr '[:upper:]' '[:lower:]')
-          docker build -t $IMAGE_NAME .
-          docker push $IMAGE_NAME
+          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          docker build -t ${IMAGE_LOWER}:latest .
+          docker push ${IMAGE_LOWER}:latest

@@ -39,7 +39,8 @@ jobs:
           docker build -t ghcr.io/${{ github.repository }}:latest .
           docker push ghcr.io/${{ github.repository }}:latest
 
-      - name: Desplegar en Kubernetes
+      - name: Construir y subir imagen Docker
         run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl rollout restart deployment/mi-app -n mi-ns
+          IMAGE_NAME=$(echo "ghcr.io/${{ github.repository }}:latest" | tr '[:upper:]' '[:lower:]')
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME

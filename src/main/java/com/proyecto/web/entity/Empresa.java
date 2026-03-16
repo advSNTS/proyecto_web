@@ -1,5 +1,6 @@
 package com.proyecto.web.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -22,4 +23,7 @@ public class Empresa {
     private String nit;
     private String nombre;
     private String correo;
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
 }

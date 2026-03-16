@@ -29,4 +29,15 @@ public class EmpresaController {
     public EmpresaResponseDTO obtenerEmpresa(@PathVariable String nit) {
         return empresaService.obtenerEmpresa(nit);
     }
+
+    @PutMapping("/{nit}")
+    public EmpresaResponseDTO actualizarEmpresa(@PathVariable String nit,
+                                                @RequestBody EmpresaRequestDTO dto) {
+        return empresaService.actualizarEmpresa(nit, dto);
+    }
+
+    @DeleteMapping("/{nit}")
+    public void eliminarEmpresa(@PathVariable String nit) {
+        empresaService.eliminarEmpresa(nit);
+    }
 }

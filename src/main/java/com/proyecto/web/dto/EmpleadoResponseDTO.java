@@ -20,4 +20,5 @@ public class EmpleadoResponseDTO {
     private String nombre;
     private TipoDocumento tipoDocumento;
     private String numeroDocumento;
+    private String correo;
 }

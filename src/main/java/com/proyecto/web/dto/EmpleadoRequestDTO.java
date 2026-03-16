@@ -17,4 +17,5 @@ public class EmpleadoRequestDTO {
     private String nombre;
     private TipoDocumento tipoDocumento;
     private String numeroDocumento;
+     private CredencialRequestDTO credencial;
 }

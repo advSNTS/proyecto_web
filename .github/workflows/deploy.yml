@@ -47,8 +47,7 @@ jobs:
   deploy-onpremise:
     name: Deploy on MicroK8s On-Premise
     runs-on: main
-    needs: build-and-publish
-
+    needs: build-and-deploy
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3

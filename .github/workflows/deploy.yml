@@ -44,3 +44,15 @@ jobs:
           IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
           docker build -t ${IMAGE_LOWER}:latest .
           docker push ${IMAGE_LOWER}:latest
+  deploy-onpremise:
+    name: Deploy on MicroK8s On-Premise
+    runs-on: main
+    needs: build-and-publish
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+    - name: Apply Kubernetes deployment
+      run: sudo microk8s kubectl apply -f k8s/deployment.yaml
+    - name: Restart Kubernetes deployment
+      run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11

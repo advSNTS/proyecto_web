@@ -1,30 +1,28 @@
 package com.proyecto.web.entity;
  
-import com.proyecto.web.enums.Permiso;
 import jakarta.persistence.*;
 import lombok.*;
  
 @Entity
-@Table(name = "roles")
+@Table(name = "rol_empleado")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Rol {
+public class RolXEmpleado {
  
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
  
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "nit", nullable = false)
-    private Empresa empresa;
+    @JoinColumn(name = "empleado_id", nullable = false)
+    private Empleado empleado;
  
-    private String nombre;
- 
-    @Enumerated(EnumType.STRING)
-    private Permiso permiso;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rol_id", nullable = false)
+    private Rol rol;
  
     @Column(nullable = false)
     @Builder.Default

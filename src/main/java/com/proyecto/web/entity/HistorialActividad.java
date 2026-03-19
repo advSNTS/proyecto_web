@@ -13,7 +13,7 @@ import lombok.Setter;
 import java.util.Date;
 
 @Entity
-@Table(name = "historial_actividad")
+@Table(name = "historiales_actividad")
 @Getter
 @Setter
 @NoArgsConstructor

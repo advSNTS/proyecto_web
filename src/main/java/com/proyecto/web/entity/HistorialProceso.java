@@ -13,7 +13,7 @@ import lombok.Setter;
 import java.util.Date;
 
 @Entity
-@Table(name = "historial_proceso")
+@Table(name = "historiales_proceso")
 @Getter
 @Setter
 @NoArgsConstructor

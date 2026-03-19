@@ -38,13 +38,13 @@ public class Empleado {
     private Empresa empresa;
 
     private String nombre;
-
+ @OneToOne(mappedBy = "empleado", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Enumerated(EnumType.STRING)
     private TipoDocumento tipoDocumento;
 
     private String numeroDocumento;
 
-    @OneToOne(mappedBy = "empleado", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+   
     private Credencial credencial;
 
     @Column(nullable = false)

@@ -36,14 +36,26 @@ public class ProcesoController {
         return ResponseEntity.ok(procesoService.obtenerPorCategoria(categoria));
     }
 
+    // idEmpleado es opcional — si no se manda, el historial queda sin responsable
     @PutMapping("/{id}")
-    public ResponseEntity<ProcesoResponseDTO> actualizar(@PathVariable Long id, @RequestBody ProcesoRequestDTO dto) {
-        return ResponseEntity.ok(procesoService.actualizarProceso(id, dto));
+    public ResponseEntity<ProcesoResponseDTO> actualizar(
+            @PathVariable Long id,
+            @RequestBody ProcesoRequestDTO dto,
+            @RequestParam(required = false) Long idEmpleado) {
+        return ResponseEntity.ok(procesoService.actualizarProceso(id, dto, idEmpleado));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        procesoService.eliminarProceso(id);
+    public ResponseEntity<Void> eliminar(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long idEmpleado) {
+        procesoService.eliminarProceso(id, idEmpleado);
         return ResponseEntity.noContent().build();
+    }
+
+    // Consultar el historial de cambios de un proceso
+    @GetMapping("/{id}/historial")
+    public ResponseEntity<?> historial(@PathVariable Long id) {
+        return ResponseEntity.ok(procesoService.obtenerHistorialDeProceso(id));
     }
 }

@@ -3,8 +3,6 @@ package com.proyecto.web.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
 @Table(name = "procesos")
 @Getter
@@ -33,6 +31,4 @@ public class Proceso {
     @Column(nullable = false)
     private Boolean activo;
 
-    @OneToMany(mappedBy = "proceso")
-    private List<Nodo> nodos;
 }

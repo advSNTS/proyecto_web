@@ -11,7 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProcesoRequestDTO {
+public class ProcesoResponseDTO {
+    private Long id;
     private String nombre;
     private String descripcion;
     private String categoria;

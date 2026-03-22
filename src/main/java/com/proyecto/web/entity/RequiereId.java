@@ -1,7 +1,9 @@
 package com.proyecto.web.entity;
 
 import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,7 +12,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class RequiereId implements Serializable {
-    private Long actividadId;
-    private Long rolId;
+    private Long actividad; 
+    private Long rol;       
 }
+ 

@@ -22,9 +22,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Compilar con Maven
-        run: mvn clean package -DskipTests
-
+      - name: Build and Analyze with SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=proyecto-web -Dsonar.projectName='proyecto-web'
+        
       - name: Login a GitHub Container Registry
         uses: docker/login-action@v3
         with:

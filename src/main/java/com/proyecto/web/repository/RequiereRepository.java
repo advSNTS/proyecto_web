@@ -10,13 +10,16 @@ import java.util.Optional;
  
 public interface RequiereRepository extends JpaRepository<Requiere, RequiereId> {
  
-
+    // Roles activos requeridos por una actividad
     List<Requiere> findAllByActividad_IdAndDeletedFalse(Long actividadId);
-
+ 
+    // Actividades activas que requieren un rol
     List<Requiere> findAllByRol_IdAndDeletedFalse(Long rolId);
  
+    // Buscar relación puntual activa
     Optional<Requiere> findByActividad_IdAndRol_IdAndDeletedFalse(Long actividadId, Long rolId);
  
+    // Validar duplicado antes de asignar
     boolean existsByActividad_IdAndRol_IdAndDeletedFalse(Long actividadId, Long rolId);
  
     // Cascada desde EmpresaXProceso: todos los Requiere donde el rol es de

@@ -1,11 +1,16 @@
 package com.proyecto.web.entity;
 
 import com.proyecto.web.enums.TipoGateway;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,13 +26,19 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class Gateway {
-
+ 
     @Id
-    private Long nodoId;
-
+    private Long id;
+ 
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "nodo_id")
+    private Nodo nodo;
+ 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private TipoGateway tipoGateway;
-
+ 
     @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;

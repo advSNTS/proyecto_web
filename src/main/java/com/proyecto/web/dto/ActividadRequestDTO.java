@@ -1,4 +1,4 @@
-package com.proyecto.web.controller;
+package com.proyecto.web.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,3 +15,4 @@ public class ActividadRequestDTO {
     private Long nodoId;
     private String descripcion;
 }
+ 

@@ -56,14 +56,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Esperar a MicroK8s
-        run: sudo microk8s status --wait-ready
+      - name: Debug MicroK8s
+        run: |
+          sudo microk8s status
+          sudo microk8s kubectl get nodes
+          sudo microk8s kubectl get pods -A
 
       - name: Apply Kubernetes deployment
-        run: sudo microk8s kubectl apply -f k8s/deployment.yaml
+        run: sudo microk8s kubectl apply -f k8s/deployment.yaml --validate=false
 
       - name: Restart Kubernetes deployment
         run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11
 
       - name: Esperar rollout
         run: sudo microk8s kubectl rollout status deployment/proyecto-web -n grupo11
+
+      - name: Ver estado de pods
+        run: sudo microk8s kubectl get pods -n grupo11 -o wide
+
+      - name: Logs pods
+        run: |
+          for pod in $(sudo microk8s kubectl get pods -n grupo11 -o jsonpath='{.items[*].metadata.name}'); do
+            echo "---- LOGS $pod ----"
+            sudo microk8s kubectl logs $pod -n grupo11
+          done

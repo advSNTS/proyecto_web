@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: proyecto-web
-  namespace: grupo11
+  namespace: grupo11        # ← el profe te asigna este valor
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: proyecto-web
@@ -18,46 +18,8 @@ spec:
       containers:
       - name: proyecto-web
         image: ghcr.io/advsnts/proyecto_web:latest
-        imagePullPolicy: Always
         ports:
         - containerPort: 8080
-
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 20
-          periodSeconds: 5
-
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 10
-
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 10
-
-        readinessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 5
-        
         env:
         - name: DB_HOST
           valueFrom:

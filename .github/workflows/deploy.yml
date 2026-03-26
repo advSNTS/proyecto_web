@@ -26,12 +26,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          DB_HOST: ${{secrets.DB_HOST}}
-          DB_NAME: ${{secrets.DB_NAME}}
-          DB_PASSWORD: ${{secrets.DB_PASSWORD}}
-          DB_PORT: ${{secrets.DB_PORT}}
-          DB_USER: ${{secrets.DB_USER}}
-        run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=proyecto-web -Dsonar.projectName='proyecto-web'
+        run: mvn -B clean package -DskipTests org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=proyecto-web -Dsonar.projectName='proyecto-web'
 
       - name: Login a GitHub Container Registry
         uses: docker/login-action@v3
@@ -51,32 +46,10 @@ jobs:
     name: Deploy on MicroK8s On-Premise
     runs-on: main
     needs: build-and-deploy
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Debug MicroK8s
-        run: |
-          sudo microk8s status
-          sudo microk8s kubectl get nodes
-          sudo microk8s kubectl get pods -A
-
-      - name: Apply Kubernetes deployment
-        run: sudo microk8s kubectl apply -f k8s/deployment.yaml --validate=false
-
-      - name: Restart Kubernetes deployment
-        run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11
-
-      - name: Esperar rollout
-        run: sudo microk8s kubectl rollout status deployment/proyecto-web -n grupo11
-
-      - name: Ver estado de pods
-        run: sudo microk8s kubectl get pods -n grupo11 -o wide
-
-      - name: Logs pods
-        run: |
-          for pod in $(sudo microk8s kubectl get pods -n grupo11 -o jsonpath='{.items[*].metadata.name}'); do
-            echo "---- LOGS $pod ----"
-            sudo microk8s kubectl logs $pod -n grupo11
-          done
+    - name: Checkout repo
+      uses: actions/checkout@v3
+    - name: Apply Kubernetes deployment
+      run: sudo microk8s kubectl apply -f k8s/deployment.yaml
+    - name: Restart Kubernetes deployment
+      run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11

@@ -45,8 +45,9 @@ jobs:
           IMAGE: ghcr.io/${{ github.repository }}
         run: |
           IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
-          docker build -t ${IMAGE_LOWER}:latest .
+          docker build -t ${IMAGE_LOWER}:latest -t ${IMAGE_LOWER}:${{ github.sha }} .
           docker push ${IMAGE_LOWER}:latest
+          docker push ${IMAGE_LOWER}:${{ github.sha }}
   deploy-onpremise:
     name: Deploy on MicroK8s On-Premise
     runs-on: main
@@ -55,6 +56,10 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v3
     - name: Apply Kubernetes deployment
-      run: sudo microk8s kubectl apply -f k8s/deployment.yaml
+      run: |
+        sudo microk8s kubectl set image deployment/proyecto-web \
+          proyecto-web=ghcr.io/advsnts/proyecto_web:${{ github.sha }} \
+          -n grupo11
+        sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11
     - name: Restart Kubernetes deployment
       run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11

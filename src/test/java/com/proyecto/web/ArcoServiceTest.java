@@ -201,4 +201,15 @@ class ArcoServiceTest {
         Long id = creado.getId();
         assertThrows(RuntimeException.class, () -> arcoService.obtenerArco(id));
     }
+
+    @Test
+    void crearArco_conOrigenIgualADestino_deberiaLanzarBusinessException() {
+        ArcoRequestDTO dto = ArcoRequestDTO.builder()
+                .idProceso(procesoId)
+                .nodoOrigenId(nodoOrigenId)
+                .nodoDestinoId(nodoOrigenId)  // El mismo nodo
+                .build();
+
+        assertThrows(Exception.class, () -> arcoService.crearArco(dto));
+    }
 }

@@ -119,7 +119,7 @@ public class ArcoService {
                 .orElseThrow(() -> new RuntimeException("Nodo no encontrado: " + nodoId));
  
         if (!nodo.getProceso().getId().equals(idProceso)) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "El nodo " + nodoId + " no pertenece al proceso " + idProceso);
         }
         return nodo;

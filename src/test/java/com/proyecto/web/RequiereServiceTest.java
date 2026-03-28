@@ -87,6 +87,7 @@ class RequiereServiceTest {
         EmpresaXProcesoRequestDTO empresaXProcesoDTO = EmpresaXProcesoRequestDTO.builder()
                 .nitEmpresa("NIT-REQ-001")
                 .idProceso(procesoId)
+                .nitOwner("NIT-REQ-001")
                 .permiso(Permiso.ADMINISTRAR)
                 .build();
 

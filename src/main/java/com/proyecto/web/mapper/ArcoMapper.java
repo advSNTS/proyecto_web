@@ -9,7 +9,7 @@ import com.proyecto.web.entity.Proceso;
 public class ArcoMapper {
     private ArcoMapper() {}
  
-    public static Arco toEntity(ArcoRequestDTO dto, Proceso proceso, Nodo origen, Nodo destino) {
+    public static Arco toEntity(Proceso proceso, Nodo origen, Nodo destino) {
         return Arco.builder()
                 .proceso(proceso)
                 .nodoOrigen(origen)

@@ -41,7 +41,7 @@ public class ArcoService {
             throw new BusinessException("Ya existe un arco entre esos nodos en este proceso");
         }
  
-        Arco arco = ArcoMapper.toEntity(dto, proceso, origen, destino);
+        Arco arco = ArcoMapper.toEntity(proceso, origen, destino);
         return ArcoMapper.toResponse(arcoRepository.save(arco));
     }
  
@@ -80,15 +80,15 @@ public class ArcoService {
         Nodo destino = buscarNodoDeProceso(dto.getNodoDestinoId(), dto.getIdProceso());
  
         if (origen.getId().equals(destino.getId())) {
-            throw new RuntimeException("El nodo origen y destino no pueden ser el mismo");
+            throw new BusinessException("El nodo origen y destino no pueden ser el mismo");
         }
- 
+
         // Validar duplicado excluyendo el arco actual
         boolean duplicado = arcoRepository.existsByProceso_IdAndNodoOrigen_IdAndNodoDestino_Id(
                 dto.getIdProceso(), dto.getNodoOrigenId(), dto.getNodoDestinoId());
- 
+
         if (duplicado && !arco.getProceso().getId().equals(dto.getIdProceso())) {
-            throw new RuntimeException("Ya existe un arco entre esos nodos en este proceso");
+            throw new BusinessException("Ya existe un arco entre esos nodos en este proceso");
         }
  
         arco.setProceso(proceso);

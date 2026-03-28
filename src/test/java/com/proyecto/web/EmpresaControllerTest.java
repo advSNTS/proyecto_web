@@ -2,7 +2,6 @@ package com.proyecto.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.EmpresaRequestDTO;
-import com.proyecto.web.dto.EmpresaResponseDTO;
 import com.proyecto.web.service.EmpresaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

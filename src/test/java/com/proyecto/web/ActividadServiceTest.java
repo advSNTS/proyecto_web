@@ -153,6 +153,7 @@ class ActividadServiceTest {
 
         actividadService.eliminarActividad(creada.getId(), null);
 
-        assertThrows(RuntimeException.class, () -> actividadService.obtenerActividad(creada.getId()));
+        Long id = creada.getId();
+        assertThrows(RuntimeException.class, () -> actividadService.obtenerActividad(id));
     }
 }

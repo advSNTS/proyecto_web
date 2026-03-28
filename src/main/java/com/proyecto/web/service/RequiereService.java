@@ -5,6 +5,7 @@ import com.proyecto.web.dto.RequiereResponseDTO;
 import com.proyecto.web.entity.Actividad;
 import com.proyecto.web.entity.Requiere;
 import com.proyecto.web.entity.Rol;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.RequiereMapper;
 import com.proyecto.web.repository.ActividadRepository;
 import com.proyecto.web.repository.EmpresaXProcesoRepository;
@@ -26,7 +27,7 @@ public class RequiereService {
  
     public RequiereResponseDTO asignarRol(RequiereRequestDTO dto) {
         if (requiereRepository.existsByActividad_IdAndRol_IdAndDeletedFalse(dto.getActividadId(), dto.getRolId())) {
-            throw new RuntimeException("La actividad ya tiene asignado ese rol");
+            throw new BusinessException("La actividad ya tiene asignado ese rol");
         }
  
         Actividad actividad = actividadRepository.findByIdAndDeletedFalse(dto.getActividadId())

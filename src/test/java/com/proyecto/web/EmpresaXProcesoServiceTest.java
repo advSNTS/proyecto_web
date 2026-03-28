@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class EmpresaXProcesoServiceTest {
+class EmpresaXProcesoServiceTest {
 
     @Autowired
     private EmpresaXProcesoService empresaXProcesoService;

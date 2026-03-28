@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class NodoServiceTest {
+class NodoServiceTest {
 
     @Autowired
     private NodoService nodoService;
@@ -170,7 +170,8 @@ public class NodoServiceTest {
         nodoService.eliminarNodo(creado.getId());
 
         // Hard delete - el nodo ya no debe existir
-        assertThrows(RuntimeException.class, () -> nodoService.obtenerNodo(creado.getId()));
+        Long id = creado.getId();
+        assertThrows(RuntimeException.class, () -> nodoService.obtenerNodo(id));
     }
 
     @Test

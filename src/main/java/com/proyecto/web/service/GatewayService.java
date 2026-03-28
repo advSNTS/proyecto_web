@@ -5,6 +5,7 @@ import com.proyecto.web.dto.GatewayResponseDTO;
 import com.proyecto.web.entity.Gateway;
 import com.proyecto.web.entity.Nodo;
 import com.proyecto.web.enums.TipoGateway;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.GatewayMapper;
 import com.proyecto.web.repository.GatewayRepository;
 import com.proyecto.web.repository.NodoRepository;
@@ -24,7 +25,7 @@ public class GatewayService {
         Nodo nodo = buscarNodo(dto.getNodoId());
  
         if (gatewayRepository.existsByNodo_IdAndDeletedFalse(dto.getNodoId())) {
-            throw new RuntimeException("El nodo ya tiene un gateway asignado");
+            throw new BusinessException("El nodo ya tiene un gateway asignado");
         }
  
         Gateway gateway = GatewayMapper.toEntity(dto, nodo);

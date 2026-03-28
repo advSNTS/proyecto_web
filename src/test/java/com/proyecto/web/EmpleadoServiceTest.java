@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class EmpleadoServiceTest {
+class EmpleadoServiceTest {
 
     @Autowired
     private EmpleadoService empleadoService;
@@ -187,6 +187,7 @@ public class EmpleadoServiceTest {
 
         empleadoService.eliminarEmpleado(creado.getId());
 
-        assertThrows(RuntimeException.class, () -> empleadoService.obtenerEmpleado(creado.getId()));
+        Long id = creado.getId();
+        assertThrows(RuntimeException.class, () -> empleadoService.obtenerEmpleado(id));
     }
 }

@@ -3,6 +3,7 @@ import com.proyecto.web.dto.HistorialProcesoResponseDTO;
 import com.proyecto.web.entity.HistorialProceso;
  
 public class HistorialProcesoMapper {
+    private HistorialProcesoMapper() {}
  
     public static HistorialProcesoResponseDTO toResponse(HistorialProceso h) {
         return HistorialProcesoResponseDTO.builder()

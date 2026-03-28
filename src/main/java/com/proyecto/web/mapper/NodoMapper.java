@@ -6,6 +6,7 @@ import com.proyecto.web.entity.Nodo;
 import com.proyecto.web.entity.Proceso;
  
 public class NodoMapper {
+    private NodoMapper() {}
  
     public static Nodo toEntity(NodoRequestDTO dto, Proceso proceso) {
         return Nodo.builder()

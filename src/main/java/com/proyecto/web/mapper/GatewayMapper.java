@@ -6,6 +6,7 @@ import com.proyecto.web.entity.Gateway;
 import com.proyecto.web.entity.Nodo;
  
 public class GatewayMapper {
+    private GatewayMapper() {}
  
     public static Gateway toEntity(GatewayRequestDTO dto, Nodo nodo) {
         return Gateway.builder()

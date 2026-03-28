@@ -5,6 +5,7 @@ import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.entity.Proceso;
  
 public class ProcesoMapper {
+    private ProcesoMapper() {}
  
     public static Proceso toEntity(ProcesoRequestDTO dto) {
         return Proceso.builder()

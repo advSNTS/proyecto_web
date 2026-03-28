@@ -13,6 +13,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmpresaService {
 
+    private static final String EMPRESA_NO_ENCONTRADA = "Empresa no encontrada";
+
     private final EmpresaRepository empresaRepository;
 
     public EmpresaResponseDTO crearEmpresa(EmpresaRequestDTO dto) {
@@ -30,13 +32,13 @@ public class EmpresaService {
 
     public EmpresaResponseDTO obtenerEmpresa(String nit) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nit)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
         return EmpresaMapper.toResponse(empresa);
     }
 
     public EmpresaResponseDTO actualizarEmpresa(String nit, EmpresaRequestDTO dto) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nit)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
 
         empresa.setNombre(dto.getNombre());
         empresa.setCorreo(dto.getCorreo());
@@ -46,7 +48,7 @@ public class EmpresaService {
 
     public void eliminarEmpresa(String nit) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nit)
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
 
         empresa.setDeleted(true);
         empresaRepository.save(empresa);

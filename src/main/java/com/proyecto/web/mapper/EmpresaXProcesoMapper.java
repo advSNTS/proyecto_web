@@ -7,6 +7,7 @@ import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.enums.Permiso;
 
 public class EmpresaXProcesoMapper {
+    private EmpresaXProcesoMapper() {}
 
     public static EmpresaXProceso toEntity(Empresa empresa, Proceso proceso, Empresa owner, Permiso permiso) {
         return EmpresaXProceso.builder()

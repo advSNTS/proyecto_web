@@ -4,6 +4,7 @@ import com.proyecto.web.dto.HistorialActividadResponseDTO;
 import com.proyecto.web.entity.HistorialActividad;
  
 public class HistorialActividadMapper {
+    private HistorialActividadMapper() {}
  
     public static HistorialActividadResponseDTO toResponse(HistorialActividad h) {
         return HistorialActividadResponseDTO.builder()

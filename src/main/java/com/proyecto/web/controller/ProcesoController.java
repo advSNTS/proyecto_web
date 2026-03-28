@@ -2,6 +2,7 @@ package com.proyecto.web.controller;
 
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
+import com.proyecto.web.entity.HistorialProceso;
 import com.proyecto.web.service.ProcesoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +56,7 @@ public class ProcesoController {
 
     // Consultar el historial de cambios de un proceso
     @GetMapping("/{id}/historial")
-    public ResponseEntity<?> historial(@PathVariable Long id) {
+    public ResponseEntity<List<HistorialProceso>> historial(@PathVariable Long id) {
         return ResponseEntity.ok(procesoService.obtenerHistorialDeProceso(id));
     }
 }

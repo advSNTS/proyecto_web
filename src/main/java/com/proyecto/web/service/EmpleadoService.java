@@ -21,6 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmpleadoService {
 
+    private static final String EMPLEADO_NO_ENCONTRADO = "Empleado no encontrado";
+    private static final String EMPRESA_NO_ENCONTRADA = "Empresa no encontrada";
+
     private final EmpleadoRepository empleadoRepository;
     private final EmpresaRepository empresaRepository;
     private final CredencialRepository credencialRepository;
@@ -28,7 +31,7 @@ public class EmpleadoService {
     @Transactional
     public EmpleadoResponseDTO crearEmpleado(EmpleadoRequestDTO dto) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
 
         Empleado empleado = EmpleadoMapper.toEntity(dto, empresa);
         empleado = empleadoRepository.save(empleado); // necesita ID antes de crear credencial
@@ -56,17 +59,17 @@ public class EmpleadoService {
 
     public EmpleadoResponseDTO obtenerEmpleado(Long id) {
         Empleado empleado = empleadoRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
         return EmpleadoMapper.toResponse(empleado);
     }
 
     @Transactional
     public EmpleadoResponseDTO actualizarEmpleado(Long id, EmpleadoRequestDTO dto) {
         Empleado empleado = empleadoRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
 
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
 
         empleado.setEmpresa(empresa);
         empleado.setNombre(dto.getNombre());
@@ -84,7 +87,7 @@ public class EmpleadoService {
 
     public void eliminarEmpleado(Long id) {
         Empleado empleado = empleadoRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
         empleado.setDeleted(true);
         empleadoRepository.save(empleado);
     }

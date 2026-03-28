@@ -7,6 +7,7 @@ import com.proyecto.web.entity.Actividad;
 import com.proyecto.web.entity.Nodo;
  
 public class ActividadMapper {
+    private ActividadMapper() {}
  
     public static Actividad toEntity(ActividadRequestDTO dto, Nodo nodo) {
         return Actividad.builder()

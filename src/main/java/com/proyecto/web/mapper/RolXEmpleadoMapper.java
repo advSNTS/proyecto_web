@@ -6,6 +6,7 @@ import com.proyecto.web.entity.Rol;
 import com.proyecto.web.entity.RolXEmpleado;
  
 public class RolXEmpleadoMapper {
+    private RolXEmpleadoMapper() {}
  
     public static RolXEmpleado toEntity(Empleado empleado, Rol rol) {
         return RolXEmpleado.builder()

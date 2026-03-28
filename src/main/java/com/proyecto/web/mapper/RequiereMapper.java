@@ -6,6 +6,7 @@ import com.proyecto.web.entity.Requiere;
 import com.proyecto.web.entity.Rol;
  
 public class RequiereMapper {
+    private RequiereMapper() {}
  
     public static Requiere toEntity(Actividad actividad, Rol rol) {
         return Requiere.builder()

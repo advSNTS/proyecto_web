@@ -6,6 +6,7 @@ import com.proyecto.web.entity.Empresa;
 import com.proyecto.web.entity.Rol;
  
 public class RolMapper {
+    private RolMapper() {}
  
     public static Rol toEntity(RolRequestDTO dto, Empresa empresa) {
         return Rol.builder()

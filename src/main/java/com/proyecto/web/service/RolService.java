@@ -21,6 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RolService {
  
+    private static final String ROL_NO_ENCONTRADO = "Rol no encontrado";
+    private static final String EMPRESA_NO_ENCONTRADA = "Empresa no encontrada";
+
     private final RolRepository rolRepository;
     private final EmpresaRepository empresaRepository;
     private final RolXEmpleadoRepository rolXEmpleadoRepository;
@@ -28,7 +31,7 @@ public class RolService {
  
     public RolResponseDTO crearRol(RolRequestDTO dto) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
  
         Rol rol = RolMapper.toEntity(dto, empresa);
         return RolMapper.toResponse(rolRepository.save(rol));
@@ -50,16 +53,16 @@ public class RolService {
  
     public RolResponseDTO obtenerRol(Long id) {
         Rol rol = rolRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new RuntimeException(ROL_NO_ENCONTRADO));
         return RolMapper.toResponse(rol);
     }
  
     public RolResponseDTO actualizarRol(Long id, RolRequestDTO dto) {
         Rol rol = rolRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new RuntimeException(ROL_NO_ENCONTRADO));
  
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
-                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
  
         rol.setEmpresa(empresa);
         rol.setNombre(dto.getNombre());
@@ -76,7 +79,7 @@ public class RolService {
     @Transactional
     public void eliminarRol(Long id) {
         Rol rol = rolRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new RuntimeException(ROL_NO_ENCONTRADO));
  
         rol.setDeleted(true);
         rolRepository.save(rol);

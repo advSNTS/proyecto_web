@@ -7,6 +7,7 @@ import com.proyecto.web.entity.Empleado;
 import com.proyecto.web.entity.Empresa;
 
 public class EmpleadoMapper {
+    private EmpleadoMapper() {}
 
     public static Empleado toEntity(EmpleadoRequestDTO dto, Empresa empresa) {
         return Empleado.builder()

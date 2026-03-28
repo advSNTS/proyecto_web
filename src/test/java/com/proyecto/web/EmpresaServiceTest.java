@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional  // ← cada test revierte sus cambios al terminar
-public class EmpresaServiceTest {
+class EmpresaServiceTest {
 
     @Autowired
     private EmpresaService empresaService;

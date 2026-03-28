@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class ArcoServiceTest {
+class ArcoServiceTest {
 
     @Autowired
     private ArcoService arcoService;
@@ -198,6 +198,7 @@ public class ArcoServiceTest {
 
         arcoService.eliminarArco(creado.getId());
 
-        assertThrows(RuntimeException.class, () -> arcoService.obtenerArco(creado.getId()));
+        Long id = creado.getId();
+        assertThrows(RuntimeException.class, () -> arcoService.obtenerArco(id));
     }
 }

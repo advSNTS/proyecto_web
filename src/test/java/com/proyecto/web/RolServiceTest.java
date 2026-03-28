@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class RolServiceTest {
+class RolServiceTest {
 
     @Autowired
     private RolService rolService;
@@ -152,6 +152,7 @@ public class RolServiceTest {
 
         rolService.eliminarRol(creado.getId());
 
-        assertThrows(RuntimeException.class, () -> rolService.obtenerRol(creado.getId()));
+        Long id = creado.getId();
+        assertThrows(RuntimeException.class, () -> rolService.obtenerRol(id));
     }
 }

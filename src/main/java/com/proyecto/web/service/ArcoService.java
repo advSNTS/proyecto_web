@@ -5,6 +5,7 @@ import com.proyecto.web.dto.ArcoResponseDTO;
 import com.proyecto.web.entity.Arco;
 import com.proyecto.web.entity.Nodo;
 import com.proyecto.web.entity.Proceso;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.ArcoMapper;
 import com.proyecto.web.repository.ArcoRepository;
 import com.proyecto.web.repository.NodoRepository;
@@ -31,13 +32,13 @@ public class ArcoService {
  
         // Un nodo no puede conectarse consigo mismo
         if (origen.getId().equals(destino.getId())) {
-            throw new RuntimeException("El nodo origen y destino no pueden ser el mismo");
+            throw new BusinessException("El nodo origen y destino no pueden ser el mismo");
         }
- 
+
         // Evitar arcos duplicados en el mismo proceso
         if (arcoRepository.existsByProceso_IdAndNodoOrigen_IdAndNodoDestino_Id(
                 dto.getIdProceso(), dto.getNodoOrigenId(), dto.getNodoDestinoId())) {
-            throw new RuntimeException("Ya existe un arco entre esos nodos en este proceso");
+            throw new BusinessException("Ya existe un arco entre esos nodos en este proceso");
         }
  
         Arco arco = ArcoMapper.toEntity(dto, proceso, origen, destino);

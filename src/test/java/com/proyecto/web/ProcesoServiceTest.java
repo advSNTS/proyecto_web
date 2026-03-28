@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class ProcesoServiceTest {
+class ProcesoServiceTest {
 
     @Autowired
     private ProcesoService procesoService;
@@ -183,7 +183,8 @@ public class ProcesoServiceTest {
 
         procesoService.eliminarProceso(creado.getId(), null);
 
-        assertThrows(RuntimeException.class, () -> procesoService.obtenerProceso(creado.getId()));
+        Long id = creado.getId();
+        assertThrows(RuntimeException.class, () -> procesoService.obtenerProceso(id));
     }
 
     @Test
@@ -201,6 +202,7 @@ public class ProcesoServiceTest {
         // Eliminar con idEmpleado responsable
         procesoService.eliminarProceso(creado.getId(), 888L);
 
-        assertThrows(RuntimeException.class, () -> procesoService.obtenerProceso(creado.getId()));
+        Long id = creado.getId();
+        assertThrows(RuntimeException.class, () -> procesoService.obtenerProceso(id));
     }
 }

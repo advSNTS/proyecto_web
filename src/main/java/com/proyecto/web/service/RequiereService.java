@@ -43,7 +43,7 @@ public class RequiereService {
                 .existsByEmpresa_NitAndProceso_IdAndDeletedFalse(nitEmpresaRol, idProceso);
  
         if (!relacionExiste) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "El rol no pertenece a una empresa asociada al proceso de esta actividad"
             );
         }

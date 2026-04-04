@@ -3599,3 +3599,4 @@ timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success
 1775334378037,29,GET /gateways,200,,Thread Group 1-200,text,true,,174,167,1,1,http://localhost:8080/gateways/proceso/1,29,0,0
 1775334378066,32,GET /arcos,200,,Thread Group 1-200,text,true,,174,164,1,1,http://localhost:8080/arcos/proceso/1,32,0,0
 1775334378098,76,POST /empresas,200,,Thread Group 1-200,text,true,,236,303,1,1,http://localhost:8080/empresas,76,0,0
+

@@ -1,5 +1,6 @@
 package com.proyecto.web.entity;
-
+import jakarta.persistence.Column;
+import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -22,7 +23,7 @@ import lombok.Setter;
 @Builder
 public class Credencial {
 
-    @Id
+   @Id
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -31,5 +32,15 @@ public class Credencial {
     private Empleado empleado;
 
     private String correo;
+
     private String contrasena;
+
+    @Builder.Default
+    private Boolean verificado = false;
+
+    @Column(name = "verification_token")
+    private String verificationToken;
+
+    @Column(name = "verification_token_expires_at")
+    private LocalDateTime verificationTokenExpiresAt;
 }

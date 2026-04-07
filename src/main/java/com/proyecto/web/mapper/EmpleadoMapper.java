@@ -6,10 +6,7 @@ import com.proyecto.web.entity.Credencial;
 import com.proyecto.web.entity.Empleado;
 import com.proyecto.web.entity.Empresa;
 
-import java.time.LocalDateTime;
-
 public class EmpleadoMapper {
-
     private EmpleadoMapper() {}
 
     public static Empleado toEntity(EmpleadoRequestDTO dto, Empresa empresa) {
@@ -21,20 +18,11 @@ public class EmpleadoMapper {
                 .build();
     }
 
-    public static Credencial toCredencial(
-            EmpleadoRequestDTO dto,
-            Empleado empleado,
-            String passwordHash,
-            String verificationToken,
-            LocalDateTime expiresAt
-    ) {
+    public static Credencial toCredencial(EmpleadoRequestDTO dto, Empleado empleado) {
         return Credencial.builder()
                 .empleado(empleado)
                 .correo(dto.getCredencial().getCorreo())
-                .contrasena(passwordHash)
-                .verificado(false)
-                .verificationToken(verificationToken)
-                .verificationTokenExpiresAt(expiresAt)
+                .contrasena(dto.getCredencial().getContrasena()) //si se quiere poner hash, es aca
                 .build();
     }
 

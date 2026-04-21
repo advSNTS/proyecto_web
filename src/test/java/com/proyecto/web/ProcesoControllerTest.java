@@ -1,9 +1,12 @@
-
 package com.proyecto.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.proyecto.web.dto.NodoRequestDTO;
+import com.proyecto.web.dto.NodoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
+import com.proyecto.web.enums.TipoNodo;
+import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class ProcesoControllerTest {
+class NodoControllerTest {
 
     @Autowired
     private WebApplicationContext context;
@@ -34,48 +37,63 @@ class ProcesoControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private NodoService nodoService;
+
+    @Autowired
     private ProcesoService procesoService;
 
     private Long procesoId;
+    private Long nodoId;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-        // Crear proceso de prueba
+
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
-                .nombre("Proceso Test Controlador")
-                .descripcion("Descripción del proceso")
-                .categoria("Categoría Test")
+                .nombre("Proceso Nodos Ctrl")
+                .descripcion("Descripción")
+                .categoria("Cat Nodos")
                 .borrador(false)
                 .activo(true)
                 .build();
 
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         this.procesoId = proceso.getId();
+
+        NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Nodo Test")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        NodoResponseDTO nodo = nodoService.crearNodo(nodoDTO);
+        this.nodoId = nodo.getId();
     }
 
     @Test
-    void crearProceso_retorna200() throws Exception {
-        ProcesoRequestDTO dto = ProcesoRequestDTO.builder()
-                .nombre("Nuevo Proceso")
-                .descripcion("Descripción nueva")
-                .categoria("Nueva Categoría")
-                .borrador(false)
-                .activo(true)
+    void crearNodo_retorna200() throws Exception {
+        NodoRequestDTO dto = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.GATEWAY)
+                .nombre("Nuevo Nodo")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
-        mockMvc.perform(post("/procesos")
+        mockMvc.perform(post("/nodos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Nuevo Proceso"))
-                .andExpect(jsonPath("$.categoria").value("Nueva Categoría"))
+                .andExpect(jsonPath("$.nombre").value("Nuevo Nodo"))
+                .andExpect(jsonPath("$.tipo").value("GATEWAY"))
                 .andExpect(jsonPath("$", notNullValue()));
     }
 
     @Test
-    void obtenerTodosProcesos_retorna200ConContenido() throws Exception {
-        mockMvc.perform(get("/procesos")
+    void obtenerNodosPorProceso_retorna200ConContenido() throws Exception {
+        mockMvc.perform(get("/nodos/proceso/" + procesoId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -83,72 +101,57 @@ class ProcesoControllerTest {
     }
 
     @Test
-    void obtenerProcesoPorId_retorna200() throws Exception {
-        mockMvc.perform(get("/procesos/" + procesoId)
+    void obtenerNodosPorProcesoYTipo_retorna200() throws Exception {
+        mockMvc.perform(get("/nodos/proceso/" + procesoId + "/tipo?tipo=ACTIVIDAD")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Proceso Test Controlador"))
-                .andExpect(jsonPath("$.id").value(procesoId.intValue()))
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
+                .andExpect(jsonPath("$[0].tipo").value("ACTIVIDAD"));
+    }
+
+    @Test
+    void obtenerNodoPorId_retorna200() throws Exception {
+        mockMvc.perform(get("/nodos/" + nodoId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Nodo Test"))
+                .andExpect(jsonPath("$.tipo").value("ACTIVIDAD"))
+                .andExpect(jsonPath("$.id").value(nodoId.intValue()))
                 .andExpect(jsonPath("$", notNullValue()));
     }
 
     @Test
-    void obtenerProcesoPorCategoria_retorna200() throws Exception {
-        mockMvc.perform(get("/procesos/categoria/Categoría Test")
+    void obtenerNodoInexistente_retorna404() throws Exception {
+        mockMvc.perform(get("/nodos/99999")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
-    }
-
-    @Test
-    void actualizarProceso_retorna200() throws Exception {
-        ProcesoRequestDTO updateDTO = ProcesoRequestDTO.builder()
-                .nombre("Nombre Actualizado")
-                .descripcion("Descripción actualizada")
-                .categoria("Categoría Test")
-                .borrador(true)
-                .activo(true)
-                .build();
-
-        mockMvc.perform(put("/procesos/" + procesoId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Nombre Actualizado"));
-    }
-
-    @Test
-    void actualizarProcesoConIdEmpleado_retorna200() throws Exception {
-        ProcesoRequestDTO updateDTO = ProcesoRequestDTO.builder()
-                .nombre("Actualizado Con Empleado")
-                .descripcion("Descripción")
-                .categoria("Categoría Test")
-                .borrador(false)
-                .activo(true)
-                .build();
-
-        mockMvc.perform(put("/procesos/" + procesoId + "?idEmpleado=123")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Actualizado Con Empleado"));
-    }
-
-    @Test
-    void eliminarProceso_retorna204() throws Exception {
-        mockMvc.perform(delete("/procesos/" + procesoId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
-
-        // Verificar que ya no existe
-        mockMvc.perform(get("/procesos/" + procesoId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void obtenerHistorialProceso_retorna200() throws Exception {
-        mockMvc.perform(get("/procesos/" + procesoId + "/historial")
+    void actualizarNodo_retorna200() throws Exception {
+        NodoRequestDTO updateDTO = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.GATEWAY)
+                .nombre("Nombre Actualizado")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        mockMvc.perform(put("/nodos/" + nodoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("Nombre Actualizado"))
+                .andExpect(jsonPath("$.tipo").value("GATEWAY"));
+    }
+
+    @Test
+    void eliminarNodo_retorna204() throws Exception {
+        mockMvc.perform(delete("/nodos/" + nodoId)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/nodos/" + nodoId))
+                .andExpect(status().isNotFound());
     }
 }

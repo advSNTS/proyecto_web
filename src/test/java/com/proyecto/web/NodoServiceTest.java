@@ -33,7 +33,6 @@ class NodoServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Crear proceso base para todos los tests de nodo
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nombre("Proceso Base Nodos")
                 .descripcion("Proceso para pruebas de nodos")
@@ -52,6 +51,8 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Actividad 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO response = nodoService.crearNodo(dto);
@@ -68,6 +69,8 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nodo Gateway 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO creado = nodoService.crearNodo(dto);
@@ -86,12 +89,16 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Uno")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoRequestDTO dto2 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ARCO)
                 .nombre("Nodo Dos")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         nodoService.crearNodo(dto1);
@@ -110,18 +117,24 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Actividad 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoRequestDTO dto2 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Actividad 002")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoRequestDTO dto3 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Gateway 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         nodoService.crearNodo(dto1);
@@ -141,6 +154,8 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Original")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO creado = nodoService.crearNodo(dto);
@@ -149,6 +164,8 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nodo Actualizado")
+                .coordenadaX(10L)
+                .coordenadaY(20L)
                 .build();
 
         NodoResponseDTO response = nodoService.actualizarNodo(creado.getId(), update);
@@ -163,13 +180,14 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Para Eliminar")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO creado = nodoService.crearNodo(dto);
 
         nodoService.eliminarNodo(creado.getId());
 
-        // Hard delete - el nodo ya no debe existir
         Long id = creado.getId();
         assertThrows(RuntimeException.class, () -> nodoService.obtenerNodo(id));
     }
@@ -180,6 +198,8 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Gateway Test")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         nodoService.crearNodo(dtoGateway);
@@ -197,18 +217,24 @@ class NodoServiceTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Inicio")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoRequestDTO dto2 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ARCO)
                 .nombre("Transición")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoRequestDTO dto3 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Fin")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO nodo1 = nodoService.crearNodo(dto1);

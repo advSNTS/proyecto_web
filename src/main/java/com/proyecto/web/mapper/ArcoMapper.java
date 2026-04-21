@@ -1,6 +1,5 @@
 package com.proyecto.web.mapper;
 
-import com.proyecto.web.dto.ArcoRequestDTO;
 import com.proyecto.web.dto.ArcoResponseDTO;
 import com.proyecto.web.entity.Arco;
 import com.proyecto.web.entity.Nodo;

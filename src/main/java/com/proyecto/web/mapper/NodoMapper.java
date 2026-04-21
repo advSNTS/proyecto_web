@@ -13,6 +13,8 @@ public class NodoMapper {
                 .proceso(proceso)
                 .tipo(dto.getTipo())
                 .nombre(dto.getNombre())
+                .coordenadaX(dto.getCoordenadaX())
+                .coordenadaY(dto.getCoordenadaY())
                 .build();
     }
  
@@ -23,6 +25,8 @@ public class NodoMapper {
                 .nombreProceso(nodo.getProceso().getNombre())
                 .tipo(nodo.getTipo())
                 .nombre(nodo.getNombre())
+                .coordenadaX(nodo.getCoordenadaX())
+                .coordenadaY(nodo.getCoordenadaY())
                 .build();
     }
 }

@@ -42,5 +42,11 @@ public class Nodo {
  
     @Column(nullable = false, length = 100)
     private String nombre;
+
+    @Column(name = "coordenada_x", nullable = false)
+    private Long coordenadaX;
+
+    @Column(name = "coordenada_y", nullable = false)
+    private Long coordenadaY;
 }
  

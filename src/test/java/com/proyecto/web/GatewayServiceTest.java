@@ -41,7 +41,6 @@ class GatewayServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Crear proceso
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nombre("Proceso Gateway Test")
                 .descripcion("Descripción proceso gateway")
@@ -53,11 +52,12 @@ class GatewayServiceTest {
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         this.procesoId = proceso.getId();
 
-        // Crear nodo gateway
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nodo Gateway")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO nodo = nodoService.crearNodo(nodoDTO);
@@ -88,7 +88,6 @@ class GatewayServiceTest {
 
         gatewayService.crearGateway(dto);
 
-        // Intentar crear otro gateway en el mismo nodo
         assertThrows(Exception.class, () -> gatewayService.crearGateway(dto));
     }
 

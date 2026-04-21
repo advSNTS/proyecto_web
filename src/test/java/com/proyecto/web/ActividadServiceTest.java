@@ -40,7 +40,6 @@ class ActividadServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Crear proceso
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nombre("Proceso Test")
                 .descripcion("Descripción proceso test")
@@ -52,11 +51,12 @@ class ActividadServiceTest {
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         this.procesoId = proceso.getId();
 
-        // Crear nodo de tipo ACTIVIDAD
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Actividad 1")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO nodo = nodoService.crearNodo(nodoDTO);
@@ -100,11 +100,12 @@ class ActividadServiceTest {
                 .descripcion("Actividad Uno")
                 .build();
 
-        // Crear otro nodo para la segunda actividad
         NodoRequestDTO nodoDTO2 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Actividad 2")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO nodo2 = nodoService.crearNodo(nodoDTO2);

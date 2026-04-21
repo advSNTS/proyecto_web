@@ -64,14 +64,12 @@ class RequiereServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Crear empresa
         EmpresaRequestDTO empresaDTO = new EmpresaRequestDTO();
         empresaDTO.setNit("NIT-REQ-001");
         empresaDTO.setNombre("Empresa Requiere Test");
         empresaDTO.setCorreo("requiere@test.com");
         empresaService.crearEmpresa(empresaDTO);
 
-        // Crear proceso
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nombre("Proceso Requiere Test")
                 .descripcion("Descripción proceso requiere")
@@ -83,7 +81,6 @@ class RequiereServiceTest {
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         Long procesoId = proceso.getId();
 
-        // Asociar empresa con proceso
         EmpresaXProcesoRequestDTO empresaXProcesoDTO = EmpresaXProcesoRequestDTO.builder()
                 .nitEmpresa("NIT-REQ-001")
                 .idProceso(procesoId)
@@ -93,17 +90,17 @@ class RequiereServiceTest {
 
         empresaXProcesoService.asignarProceso(empresaXProcesoDTO);
 
-        // Crear nodo actividad
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Requiere")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO nodo = nodoService.crearNodo(nodoDTO);
         this.nodoId = nodo.getId();
 
-        // Crear actividad
         ActividadRequestDTO actividadDTO = ActividadRequestDTO.builder()
                 .nodoId(nodoId)
                 .descripcion("Actividad Requiere Test")
@@ -112,7 +109,6 @@ class RequiereServiceTest {
         ActividadResponseDTO actividad = actividadService.crearActividad(actividadDTO);
         this.actividadId = actividad.getId();
 
-        // Crear rol
         RolRequestDTO rolDTO = RolRequestDTO.builder()
                 .nitEmpresa("NIT-REQ-001")
                 .nombre("Rol Requiere Test")
@@ -147,7 +143,6 @@ class RequiereServiceTest {
 
         requiereService.asignarRol(dto);
 
-        // Intentar asignar el mismo rol
         assertThrows(Exception.class, () -> requiereService.asignarRol(dto));
     }
 

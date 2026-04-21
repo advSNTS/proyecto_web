@@ -41,7 +41,6 @@ class ArcoServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Crear proceso
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nombre("Proceso Arco Test")
                 .descripcion("Descripción proceso arco")
@@ -53,21 +52,23 @@ class ArcoServiceTest {
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         this.procesoId = proceso.getId();
 
-        // Crear nodo origen
         NodoRequestDTO nodoOrigen = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Origen")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO origen = nodoService.crearNodo(nodoOrigen);
         this.nodoOrigenId = origen.getId();
 
-        // Crear nodo destino
         NodoRequestDTO nodoDestino = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Destino")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO destino = nodoService.crearNodo(nodoDestino);
@@ -158,11 +159,12 @@ class ArcoServiceTest {
 
     @Test
     void actualizarArco_deberiaRetornarArcoActualizado() {
-        // Crear tercer nodo para actualizar destino
         NodoRequestDTO nodoDestino3 = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Destino 3")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO destino3 = nodoService.crearNodo(nodoDestino3);
@@ -207,7 +209,7 @@ class ArcoServiceTest {
         ArcoRequestDTO dto = ArcoRequestDTO.builder()
                 .idProceso(procesoId)
                 .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoOrigenId)  // El mismo nodo
+                .nodoDestinoId(nodoOrigenId)
                 .build();
 
         assertThrows(Exception.class, () -> arcoService.crearArco(dto));

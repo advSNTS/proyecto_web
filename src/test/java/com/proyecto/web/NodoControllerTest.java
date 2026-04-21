@@ -48,7 +48,7 @@ class NodoControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-        // Crear proceso
+
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nombre("Proceso Nodos Ctrl")
                 .descripcion("Descripción")
@@ -60,11 +60,12 @@ class NodoControllerTest {
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         this.procesoId = proceso.getId();
 
-        // Crear nodo de prueba
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Test")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         NodoResponseDTO nodo = nodoService.crearNodo(nodoDTO);
@@ -77,6 +78,8 @@ class NodoControllerTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nuevo Nodo")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         mockMvc.perform(post("/nodos")
@@ -130,6 +133,8 @@ class NodoControllerTest {
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nombre Actualizado")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
                 .build();
 
         mockMvc.perform(put("/nodos/" + nodoId)
@@ -146,7 +151,6 @@ class NodoControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        // Verificar que ya no existe (hard delete)
         mockMvc.perform(get("/nodos/" + nodoId))
                 .andExpect(status().isNotFound());
     }

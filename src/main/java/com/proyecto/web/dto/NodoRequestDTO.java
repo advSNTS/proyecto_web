@@ -17,5 +17,7 @@ public class NodoRequestDTO {
     private Long idProceso;
     private TipoNodo tipo;
     private String nombre;
+    private Long coordenadaX;
+    private Long coordenadaY;
 }
  

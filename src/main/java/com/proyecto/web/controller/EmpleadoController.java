@@ -1,6 +1,8 @@
 package com.proyecto.web.controller;
 
 import com.proyecto.web.dto.EmpleadoRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginResponseDTO;
 import com.proyecto.web.dto.EmpleadoResponseDTO;
 import com.proyecto.web.service.EmpleadoService;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +46,10 @@ public class EmpleadoController {
     @DeleteMapping("/{id}")
     public void eliminarEmpleado(@PathVariable Long id) {
         empleadoService.eliminarEmpleado(id);
+    }
+
+    @PostMapping("/login")
+    public EmpleadoLoginResponseDTO login(@RequestBody EmpleadoLoginRequestDTO dto) {
+        return empleadoService.login(dto);
     }
 }

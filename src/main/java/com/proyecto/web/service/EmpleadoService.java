@@ -1,10 +1,13 @@
 package com.proyecto.web.service;
 
 import com.proyecto.web.dto.EmpleadoRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginResponseDTO;
 import com.proyecto.web.dto.EmpleadoResponseDTO;
 import com.proyecto.web.entity.Credencial;
 import com.proyecto.web.entity.Empleado;
 import com.proyecto.web.entity.Empresa;
+import com.proyecto.web.exception.AuthenticationException;
 import com.proyecto.web.mapper.EmpleadoMapper;
 import com.proyecto.web.repository.EmpleadoRepository;
 import com.proyecto.web.repository.EmpresaRepository;
@@ -23,6 +26,7 @@ public class EmpleadoService {
 
     private static final String EMPLEADO_NO_ENCONTRADO = "Empleado no encontrado";
     private static final String EMPRESA_NO_ENCONTRADA = "Empresa no encontrada";
+    private static final String CREDENCIALES_INVALIDAS = "Credenciales invalidas";
 
     private final EmpleadoRepository empleadoRepository;
     private final EmpresaRepository empresaRepository;
@@ -90,5 +94,26 @@ public class EmpleadoService {
                 .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
         empleado.setDeleted(true);
         empleadoRepository.save(empleado);
+    }
+
+    @Transactional
+    public EmpleadoLoginResponseDTO login(EmpleadoLoginRequestDTO dto) {
+        Credencial credencial = credencialRepository.findByCorreoAndContrasena(dto.getCorreo(), dto.getContrasena())
+                .orElseThrow(() -> new AuthenticationException(CREDENCIALES_INVALIDAS));
+
+        Empleado empleado = credencial.getEmpleado();
+        if (empleado == null || empleado.isDeleted()) {
+            throw new AuthenticationException(CREDENCIALES_INVALIDAS);
+        }
+
+        return EmpleadoLoginResponseDTO.builder()
+                .id(empleado.getId())
+                .nitEmpresa(empleado.getEmpresa().getNit())
+                .nombreEmpresa(empleado.getEmpresa().getNombre())
+                .nombre(empleado.getNombre())
+                .tipoDocumento(empleado.getTipoDocumento())
+                .numeroDocumento(empleado.getNumeroDocumento())
+                .correo(credencial.getCorreo())
+                .build();
     }
 }

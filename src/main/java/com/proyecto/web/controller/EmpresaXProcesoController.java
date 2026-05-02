@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/empresa-proceso")
+@RequestMapping("/api/empresa-proceso")
 @RequiredArgsConstructor
 public class EmpresaXProcesoController {
 

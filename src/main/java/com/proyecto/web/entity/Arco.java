@@ -1,5 +1,6 @@
 package com.proyecto.web.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -38,5 +39,9 @@ public class Arco {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nodo_destino", nullable = false)
     private Nodo nodoDestino;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean eliminado = false;
 }
  

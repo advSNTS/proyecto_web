@@ -17,5 +17,6 @@ import lombok.Setter;
 public class RolRequestDTO {
     private String nitEmpresa;
     private String nombre;
+    private String descripcion;
     private Permiso permiso;
 }

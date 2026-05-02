@@ -18,6 +18,7 @@ public class RolResponseDTO {
     private String nitEmpresa;
     private String nombreEmpresa;
     private String nombre;
+    private String descripcion;
     private Permiso permiso;
 }
  

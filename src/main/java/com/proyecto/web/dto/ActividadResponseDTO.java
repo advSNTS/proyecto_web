@@ -18,4 +18,6 @@ public class ActividadResponseDTO {
     private Long procesoId;
     private String nombreProceso;
     private String descripcion;
+    private String tipoActividad;
+    private Long laneId;
 }

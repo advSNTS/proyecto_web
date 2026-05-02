@@ -1,11 +1,13 @@
 package com.proyecto.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.NodoRequestDTO;
 import com.proyecto.web.dto.NodoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.enums.TipoNodo;
+import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +21,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 class NodoControllerTest {
+
+    private static final String NIT = "900NODO-CTRL-1";
 
     @Autowired
     private WebApplicationContext context;
@@ -42,6 +51,9 @@ class NodoControllerTest {
     @Autowired
     private ProcesoService procesoService;
 
+    @Autowired
+    private EmpresaService empresaService;
+
     private Long procesoId;
     private Long nodoId;
 
@@ -49,7 +61,14 @@ class NodoControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
 
+        EmpresaRequestDTO emp = new EmpresaRequestDTO();
+        emp.setNit(NIT);
+        emp.setNombre("Emp Nodo Ctrl");
+        emp.setCorreo("enc@test.com");
+        empresaService.crearEmpresa(emp);
+
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .nombre("Proceso Nodos Ctrl")
                 .descripcion("Descripción")
                 .categoria("Cat Nodos")
@@ -61,6 +80,7 @@ class NodoControllerTest {
         this.procesoId = proceso.getId();
 
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Test")
@@ -75,6 +95,7 @@ class NodoControllerTest {
     @Test
     void crearNodo_retorna200() throws Exception {
         NodoRequestDTO dto = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nuevo Nodo")
@@ -82,7 +103,7 @@ class NodoControllerTest {
                 .coordenadaY(0L)
                 .build();
 
-        mockMvc.perform(post("/nodos")
+        mockMvc.perform(post("/api/nodos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -93,7 +114,7 @@ class NodoControllerTest {
 
     @Test
     void obtenerNodosPorProceso_retorna200ConContenido() throws Exception {
-        mockMvc.perform(get("/nodos/proceso/" + procesoId)
+        mockMvc.perform(get("/api/nodos/proceso/" + procesoId).param("nitEmpresa", NIT)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -102,7 +123,9 @@ class NodoControllerTest {
 
     @Test
     void obtenerNodosPorProcesoYTipo_retorna200() throws Exception {
-        mockMvc.perform(get("/nodos/proceso/" + procesoId + "/tipo?tipo=ACTIVIDAD")
+        mockMvc.perform(get("/api/nodos/proceso/" + procesoId + "/tipo")
+                .param("tipo", "ACTIVIDAD")
+                .param("nitEmpresa", NIT)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -111,7 +134,7 @@ class NodoControllerTest {
 
     @Test
     void obtenerNodoPorId_retorna200() throws Exception {
-        mockMvc.perform(get("/nodos/" + nodoId)
+        mockMvc.perform(get("/api/nodos/" + nodoId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Nodo Test"))
@@ -122,7 +145,7 @@ class NodoControllerTest {
 
     @Test
     void obtenerNodoInexistente_retorna404() throws Exception {
-        mockMvc.perform(get("/nodos/99999")
+        mockMvc.perform(get("/api/nodos/99999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -130,6 +153,7 @@ class NodoControllerTest {
     @Test
     void actualizarNodo_retorna200() throws Exception {
         NodoRequestDTO updateDTO = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nombre Actualizado")
@@ -137,7 +161,7 @@ class NodoControllerTest {
                 .coordenadaY(0L)
                 .build();
 
-        mockMvc.perform(put("/nodos/" + nodoId)
+        mockMvc.perform(put("/api/nodos/" + nodoId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
@@ -147,11 +171,11 @@ class NodoControllerTest {
 
     @Test
     void eliminarNodo_retorna204() throws Exception {
-        mockMvc.perform(delete("/nodos/" + nodoId)
+        mockMvc.perform(delete("/api/nodos/" + nodoId).param("nitEmpresa", NIT)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/nodos/" + nodoId))
+        mockMvc.perform(get("/api/nodos/" + nodoId))
                 .andExpect(status().isNotFound());
     }
 }

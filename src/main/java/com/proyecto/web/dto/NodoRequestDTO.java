@@ -14,6 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class NodoRequestDTO {
+    private String nitEmpresa;
     private Long idProceso;
     private TipoNodo tipo;
     private String nombre;

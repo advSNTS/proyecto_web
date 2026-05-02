@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/rol-empleado")
+@RequestMapping("/api/rol-empleado")
 @RequiredArgsConstructor
 public class RolXEmpleadoController {
 

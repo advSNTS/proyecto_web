@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/nodos")
+@RequestMapping("/api/nodos")
 @RequiredArgsConstructor
 public class NodoController {
 
@@ -23,16 +23,18 @@ public class NodoController {
     }
 
     @GetMapping("/proceso/{idProceso}")
-    public ResponseEntity<List<NodoResponseDTO>> porProceso(@PathVariable Long idProceso) {
-        return ResponseEntity.ok(nodoService.obtenerPorProceso(idProceso));
+    public ResponseEntity<List<NodoResponseDTO>> porProceso(
+            @PathVariable Long idProceso,
+            @RequestParam String nitEmpresa) {
+        return ResponseEntity.ok(nodoService.obtenerPorProceso(idProceso, nitEmpresa));
     }
 
-    // Opcional: filtrar por tipo — GET /nodos/proceso/1?tipo=ACTIVIDAD
     @GetMapping("/proceso/{idProceso}/tipo")
     public ResponseEntity<List<NodoResponseDTO>> porProcesoYTipo(
             @PathVariable Long idProceso,
-            @RequestParam TipoNodo tipo) {
-        return ResponseEntity.ok(nodoService.obtenerPorProcesoYTipo(idProceso, tipo));
+            @RequestParam TipoNodo tipo,
+            @RequestParam String nitEmpresa) {
+        return ResponseEntity.ok(nodoService.obtenerPorProcesoYTipo(idProceso, tipo, nitEmpresa));
     }
 
     @GetMapping("/{id}")
@@ -48,8 +50,10 @@ public class NodoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        nodoService.eliminarNodo(id);
+    public ResponseEntity<Void> eliminar(
+            @PathVariable Long id,
+            @RequestParam String nitEmpresa) {
+        nodoService.eliminarNodo(id, nitEmpresa);
         return ResponseEntity.noContent().build();
     }
 }

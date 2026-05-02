@@ -1,5 +1,6 @@
 package com.proyecto.web;
 
+import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.GatewayRequestDTO;
 import com.proyecto.web.dto.GatewayResponseDTO;
 import com.proyecto.web.dto.NodoRequestDTO;
@@ -8,6 +9,7 @@ import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.enums.TipoGateway;
 import com.proyecto.web.enums.TipoNodo;
+import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.GatewayService;
 import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
@@ -27,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class GatewayServiceTest {
 
+    private static final String NIT = "900GW-SVC-1";
+
     @Autowired
     private GatewayService gatewayService;
 
@@ -36,12 +40,22 @@ class GatewayServiceTest {
     @Autowired
     private ProcesoService procesoService;
 
+    @Autowired
+    private EmpresaService empresaService;
+
     private Long procesoId;
     private Long nodoId;
 
     @BeforeEach
     void setUp() {
+        EmpresaRequestDTO emp = new EmpresaRequestDTO();
+        emp.setNit(NIT);
+        emp.setNombre("Emp GW");
+        emp.setCorreo("egw@test.com");
+        empresaService.crearEmpresa(emp);
+
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .nombre("Proceso Gateway Test")
                 .descripcion("Descripción proceso gateway")
                 .categoria("Categoría C")
@@ -53,6 +67,7 @@ class GatewayServiceTest {
         this.procesoId = proceso.getId();
 
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.GATEWAY)
                 .nombre("Nodo Gateway")

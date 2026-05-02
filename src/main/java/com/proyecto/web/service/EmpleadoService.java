@@ -6,16 +6,21 @@ import com.proyecto.web.dto.EmpleadoLoginResponseDTO;
 import com.proyecto.web.dto.EmpleadoResponseDTO;
 import com.proyecto.web.entity.Credencial;
 import com.proyecto.web.entity.Empleado;
+import com.proyecto.web.entity.EmpleadoRolSistema;
 import com.proyecto.web.entity.Empresa;
+import com.proyecto.web.enums.TipoRolSistema;
 import com.proyecto.web.exception.AuthenticationException;
 import com.proyecto.web.mapper.EmpleadoMapper;
+import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.repository.EmpleadoRepository;
+import com.proyecto.web.repository.EmpleadoRolSistemaRepository;
 import com.proyecto.web.repository.EmpresaRepository;
+import com.proyecto.web.security.JwtService;
 
 import jakarta.transaction.Transactional;
 
-import com.proyecto.web.repository.CredencialRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +36,11 @@ public class EmpleadoService {
     private final EmpleadoRepository empleadoRepository;
     private final EmpresaRepository empresaRepository;
     private final CredencialRepository credencialRepository;
+    private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
+    private final JwtService jwtService;
+
+    @Value("${app.security.enabled:true}")
+    private boolean securityEnabled;
 
     @Transactional
     public EmpleadoResponseDTO crearEmpleado(EmpleadoRequestDTO dto) {
@@ -44,6 +54,14 @@ public class EmpleadoService {
         credencialRepository.save(credencial);
 
         empleado.setCredencial(credencial);
+
+        empleadoRolSistemaRepository.save(EmpleadoRolSistema.builder()
+                .empleado(empleado)
+                .empresa(empresa)
+                .tipoRol(TipoRolSistema.READER)
+                .eliminado(false)
+                .build());
+
         return EmpleadoMapper.toResponse(empleado);
     }
 
@@ -106,6 +124,19 @@ public class EmpleadoService {
             throw new AuthenticationException(CREDENCIALES_INVALIDAS);
         }
 
+        String token = null;
+        if (securityEnabled) {
+            List<TipoRolSistema> roles = empleadoRolSistemaRepository.findAllByEmpleado_IdAndEliminadoFalse(empleado.getId())
+                    .stream()
+                    .map(EmpleadoRolSistema::getTipoRol)
+                    .toList();
+            token = jwtService.generarToken(
+                    empleado.getId(),
+                    empleado.getEmpresa().getNit(),
+                    empleado.isAdminGlobal(),
+                    roles);
+        }
+
         return EmpleadoLoginResponseDTO.builder()
                 .id(empleado.getId())
                 .nitEmpresa(empleado.getEmpresa().getNit())
@@ -114,6 +145,7 @@ public class EmpleadoService {
                 .tipoDocumento(empleado.getTipoDocumento())
                 .numeroDocumento(empleado.getNumeroDocumento())
                 .correo(credencial.getCorreo())
+                .token(token)
                 .build();
     }
 }

@@ -2,14 +2,26 @@ package com.proyecto.web.service;
 
 import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.EmpresaResponseDTO;
+import com.proyecto.web.entity.Credencial;
+import com.proyecto.web.entity.Empleado;
+import com.proyecto.web.entity.EmpleadoRolSistema;
 import com.proyecto.web.entity.Empresa;
 import com.proyecto.web.entity.Pool;
+import com.proyecto.web.enums.TipoDocumento;
+import com.proyecto.web.enums.TipoRolSistema;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.EmpresaMapper;
+import com.proyecto.web.repository.CredencialRepository;
+import com.proyecto.web.repository.EmpleadoRepository;
+import com.proyecto.web.repository.EmpleadoRolSistemaRepository;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.PoolRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,23 +31,85 @@ import java.util.List;
 public class EmpresaService {
 
     private static final String EMPRESA_NO_ENCONTRADA = "Empresa no encontrada";
+    public static final String CONTRASENA_ADMIN_POR_DEFECTO = "Admin123!";
 
     private final EmpresaRepository empresaRepository;
     private final PoolRepository poolRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final CredencialRepository credencialRepository;
+    private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
+    private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public EmpresaResponseDTO crearEmpresa(EmpresaRequestDTO dto) {
+        if (credencialRepository.existsByCorreo(dto.getCorreo().trim())) {
+            throw new BusinessException("Ya existe un usuario con ese correo", HttpStatus.CONFLICT);
+        }
         Empresa empresa = EmpresaMapper.toEntity(dto);
         empresa = empresaRepository.save(empresa);
+
         Pool poolDefault = Pool.builder()
                 .empresa(empresa)
-                .nombre("Pool por defecto")
+                .nombre("Pool principal")
                 .descripcion("Creado automáticamente al registrar la empresa")
                 .esDefault(true)
                 .eliminado(false)
                 .build();
         poolRepository.save(poolDefault);
-        log.info("Empresa y pool por defecto creados nit={}", empresa.getNit());
-        return EmpresaMapper.toResponse(empresa);
+
+        String passwordPlano = (dto.getContrasenaAdministrador() != null
+                && !dto.getContrasenaAdministrador().isBlank())
+                ? dto.getContrasenaAdministrador()
+                : CONTRASENA_ADMIN_POR_DEFECTO;
+        boolean passwordAutogenerada = dto.getContrasenaAdministrador() == null
+                || dto.getContrasenaAdministrador().isBlank();
+
+        String doc = dto.getNit() == null ? "0" : dto.getNit().replaceAll("[^0-9A-Za-z]", "");
+        if (doc.isEmpty()) {
+            doc = "0";
+        }
+        if (doc.length() > 40) {
+            doc = doc.substring(0, 40);
+        }
+
+        Empleado admin = Empleado.builder()
+                .empresa(empresa)
+                .nombre("Administrador")
+                .tipoDocumento(TipoDocumento.CC)
+                .numeroDocumento(doc)
+                .adminGlobal(false)
+                .deleted(false)
+                .build();
+        admin = empleadoRepository.save(admin);
+
+        Credencial credencial = Credencial.builder()
+                .empleado(admin)
+                .correo(dto.getCorreo().trim())
+                .contrasena(passwordEncoder.encode(passwordPlano))
+                .build();
+        credencialRepository.save(credencial);
+
+        empleadoRolSistemaRepository.save(EmpleadoRolSistema.builder()
+                .empleado(admin)
+                .empresa(empresa)
+                .tipoRol(TipoRolSistema.ADMIN)
+                .eliminado(false)
+                .build());
+
+        log.info("Empresa, pool y administrador creados nit={} correoAdmin={}", empresa.getNit(), dto.getCorreo());
+
+        EmpresaResponseDTO response = EmpresaMapper.toResponse(empresa);
+        if (passwordAutogenerada) {
+            response.setMensajeRegistro(
+                    "Registro exitoso. El usuario administrador usa el correo de contacto de la empresa y la "
+                            + "contraseña inicial definida en la guía del proyecto (entorno de desarrollo). "
+                            + "Cambie la contraseña tras el primer inicio de sesión.");
+        } else {
+            response.setMensajeRegistro(
+                    "Registro exitoso. El administrador puede iniciar sesión con el correo de contacto y la "
+                            + "contraseña indicada en el registro.");
+        }
+        return response;
     }
 
     public List<EmpresaResponseDTO> obtenerEmpresas() {

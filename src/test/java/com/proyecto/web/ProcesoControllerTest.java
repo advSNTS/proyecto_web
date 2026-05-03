@@ -167,6 +167,7 @@ class ProcesoControllerTest {
     @Test
     void obtenerHistorialProceso_retorna200() throws Exception {
         mockMvc.perform(get("/api/procesos/" + procesoId + "/historial")
+                .param("nitEmpresa", NIT)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }

@@ -23,7 +23,6 @@ public final class SecurityUtils {
             return nitParam;
         }
         return currentUser()
-                .filter(p -> !p.isAdminGlobal())
                 .map(UsuarioPrincipal::getNitEmpresa)
                 .orElse(null);
     }

@@ -1,10 +1,10 @@
 package com.proyecto.web.controller;
 
+import com.proyecto.web.dto.HistorialProcesoResponseDTO;
 import com.proyecto.web.dto.ProcesoCompartidoRequestDTO;
 import com.proyecto.web.dto.ProcesoCompartidoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
-import com.proyecto.web.entity.HistorialProceso;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.service.ProcesoCompartidoService;
@@ -78,8 +78,11 @@ public class ProcesoController {
     }
 
     @GetMapping("/{id}/historial")
-    public ResponseEntity<List<HistorialProceso>> historial(@PathVariable Long id) {
-        return ResponseEntity.ok(procesoService.obtenerHistorialDeProceso(id));
+    public ResponseEntity<List<HistorialProcesoResponseDTO>> historial(
+            @PathVariable Long id,
+            @RequestParam(required = false) String nitEmpresa) {
+        return ResponseEntity.ok(
+                procesoService.obtenerHistorialProcesoParaEmpresa(id, requerirNit(nitEmpresa)));
     }
 
     @PostMapping("/{id}/compartir")

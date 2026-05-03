@@ -29,7 +29,7 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generarToken(Long empleadoId, String nitEmpresa, boolean adminGlobal,
+    public String generarToken(Long userId, String nitEmpresa, String email, boolean adminGlobal,
                                Collection<TipoRolSistema> rolesSistema) {
         List<String> authorities = rolesSistema.stream()
                 .map(r -> "ROLE_" + r.name())
@@ -37,7 +37,10 @@ public class JwtService {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
-                .subject(String.valueOf(empleadoId))
+                .subject(String.valueOf(userId))
+                .claim("userId", userId)
+                .claim("email", email != null ? email : "")
+                .claim("empresaId", nitEmpresa)
                 .claim("nit", nitEmpresa)
                 .claim("adminGlobal", adminGlobal)
                 .claim("authorities", authorities)

@@ -14,6 +14,7 @@ import com.proyecto.web.mapper.EmpleadoMapper;
 import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.repository.EmpleadoRepository;
 import com.proyecto.web.repository.EmpleadoRolSistemaRepository;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.security.JwtService;
 
@@ -21,6 +22,8 @@ import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,19 +41,27 @@ public class EmpleadoService {
     private final CredencialRepository credencialRepository;
     private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${app.security.enabled:true}")
     private boolean securityEnabled;
 
     @Transactional
     public EmpleadoResponseDTO crearEmpleado(EmpleadoRequestDTO dto) {
+        if (credencialRepository.existsByCorreo(dto.getCredencial().getCorreo().trim())) {
+            throw new BusinessException("Ya existe un usuario con ese correo", HttpStatus.CONFLICT);
+        }
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
                 .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
 
         Empleado empleado = EmpleadoMapper.toEntity(dto, empresa);
         empleado = empleadoRepository.save(empleado); // necesita ID antes de crear credencial
 
-        Credencial credencial = EmpleadoMapper.toCredencial(dto, empleado);
+        Credencial credencial = Credencial.builder()
+                .empleado(empleado)
+                .correo(dto.getCredencial().getCorreo())
+                .contrasena(passwordEncoder.encode(dto.getCredencial().getContrasena()))
+                .build();
         credencialRepository.save(credencial);
 
         empleado.setCredencial(credencial);
@@ -98,9 +109,11 @@ public class EmpleadoService {
         empleado.setTipoDocumento(dto.getTipoDocumento());
         empleado.setNumeroDocumento(dto.getNumeroDocumento());
 
-        // actualizar correo si viene en el request
         if (dto.getCredencial() != null && empleado.getCredencial() != null) {
             empleado.getCredencial().setCorreo(dto.getCredencial().getCorreo());
+            if (dto.getCredencial().getContrasena() != null && !dto.getCredencial().getContrasena().isBlank()) {
+                empleado.getCredencial().setContrasena(passwordEncoder.encode(dto.getCredencial().getContrasena()));
+            }
             credencialRepository.save(empleado.getCredencial());
         }
 
@@ -116,11 +129,19 @@ public class EmpleadoService {
 
     @Transactional
     public EmpleadoLoginResponseDTO login(EmpleadoLoginRequestDTO dto) {
-        Credencial credencial = credencialRepository.findByCorreoAndContrasena(dto.getCorreo(), dto.getContrasena())
+        Credencial credencial = credencialRepository.findByCorreo(dto.getCorreo().trim())
                 .orElseThrow(() -> new AuthenticationException(CREDENCIALES_INVALIDAS));
 
         Empleado empleado = credencial.getEmpleado();
         if (empleado == null || empleado.isDeleted()) {
+            throw new AuthenticationException(CREDENCIALES_INVALIDAS);
+        }
+
+        String stored = credencial.getContrasena();
+        boolean passwordOk = stored != null
+                && (passwordEncoder.matches(dto.getContrasena(), stored)
+                || stored.equals(dto.getContrasena()));
+        if (!passwordOk) {
             throw new AuthenticationException(CREDENCIALES_INVALIDAS);
         }
 
@@ -133,6 +154,7 @@ public class EmpleadoService {
             token = jwtService.generarToken(
                     empleado.getId(),
                     empleado.getEmpresa().getNit(),
+                    credencial.getCorreo(),
                     empleado.isAdminGlobal(),
                     roles);
         }

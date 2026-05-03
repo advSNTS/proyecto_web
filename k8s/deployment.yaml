@@ -13,9 +13,12 @@ spec:
       labels:
         app: proyecto-web
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
       containers:
       - name: proyecto-web
         image: ghcr.io/advsnts/proyecto_web:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:

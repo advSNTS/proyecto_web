@@ -57,11 +57,25 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Apply Kubernetes deployment
+      - name: Limpiar pods pendientes y terminating
+        run: |
+          sudo microk8s kubectl delete pods -n grupo11 \
+            --field-selector=status.phase=Pending \
+            --grace-period=0 --force 2>/dev/null || true
+          TERMINATING=$(sudo microk8s kubectl get pods -n grupo11 2>/dev/null \
+            | grep Terminating | awk '{print $1}')
+          if [ -n "$TERMINATING" ]; then
+            sudo microk8s kubectl delete pods -n grupo11 $TERMINATING \
+              --grace-period=0 --force 2>/dev/null || true
+          fi
+
+      - name: Deploy con SHA tag
         run: |
           sudo microk8s kubectl set image deployment/proyecto-web \
             proyecto-web=ghcr.io/advsnts/proyecto_web:${{ github.sha }} \
             -n grupo11
 
       - name: Wait for rollout
-        run: sudo microk8s kubectl rollout status deployment/proyecto-web -n grupo11
+        run: |
+          sudo microk8s kubectl rollout status deployment/proyecto-web \
+            -n grupo11 --timeout=300s

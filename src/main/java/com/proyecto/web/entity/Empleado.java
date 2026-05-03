@@ -50,4 +50,11 @@ public class Empleado {
     @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;
+
+    /**
+     * Administrador global: ignora el aislamiento por empresa en autorización (uso restringido).
+     */
+    @Column(name = "admin_global", nullable = false)
+    @Builder.Default
+    private boolean adminGlobal = false;
 }

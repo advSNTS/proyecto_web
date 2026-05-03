@@ -1,0 +1,116 @@
+package com.proyecto.web.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.proyecto.web.dto.ProcesoCompartidoRequestDTO;
+import com.proyecto.web.dto.ProcesoCompartidoResponseDTO;
+import com.proyecto.web.entity.Empleado;
+import com.proyecto.web.entity.HistorialProceso;
+import com.proyecto.web.entity.Pool;
+import com.proyecto.web.entity.Proceso;
+import com.proyecto.web.entity.ProcesoCompartido;
+import com.proyecto.web.enums.TipoRolSistema;
+import com.proyecto.web.exception.BusinessException;
+import com.proyecto.web.repository.EmpleadoRepository;
+import com.proyecto.web.repository.EmpleadoRolSistemaRepository;
+import com.proyecto.web.repository.HistorialProcesoRepository;
+import com.proyecto.web.repository.PoolRepository;
+import com.proyecto.web.repository.ProcesoCompartidoRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProcesoCompartidoService {
+
+    private final ProcesoService procesoService;
+    private final PoolRepository poolRepository;
+    private final ProcesoCompartidoRepository procesoCompartidoRepository;
+    private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
+    private final HistorialProcesoRepository historialProcesoRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final ObjectMapper objectMapper;
+
+    @Transactional
+    public ProcesoCompartidoResponseDTO compartir(
+            Long procesoId,
+            ProcesoCompartidoRequestDTO dto,
+            Long empleadoId,
+            String nitEmpresa) {
+
+        if (empleadoId == null) {
+            throw new BusinessException("Se requiere empleado autenticado para compartir", HttpStatus.UNAUTHORIZED);
+        }
+        if (!empleadoRolSistemaRepository.existsByEmpleado_IdAndEmpresa_NitAndTipoRolAndEliminadoFalse(
+                empleadoId, nitEmpresa, TipoRolSistema.ADMIN)) {
+            throw new BusinessException("Solo administradores de sistema pueden compartir procesos", HttpStatus.FORBIDDEN);
+        }
+
+        Proceso proceso = procesoService.buscarVigente(procesoId, nitEmpresa);
+        Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), nitEmpresa)
+                .orElseThrow(() -> new BusinessException("Pool no encontrado en la empresa", HttpStatus.NOT_FOUND));
+
+        if (procesoCompartidoRepository.existsByProceso_IdAndPool_IdAndEliminadoFalse(procesoId, pool.getId())) {
+            throw new BusinessException("El proceso ya está compartido con ese pool", HttpStatus.CONFLICT);
+        }
+
+        ProcesoCompartido pc = ProcesoCompartido.builder()
+                .proceso(proceso)
+                .pool(pool)
+                .permiso(dto.getPermiso())
+                .eliminado(false)
+                .build();
+        pc = procesoCompartidoRepository.save(pc);
+
+        registrarHistorial(proceso, empleadoId, Map.of("accion", "COMPARTIR", "poolId", pool.getId(), "permiso", dto.getPermiso().name()));
+
+        log.info("Proceso {} compartido con pool {}", procesoId, pool.getId());
+        return toDto(pc);
+    }
+
+    public List<ProcesoCompartidoResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
+        procesoService.buscarVigente(procesoId, nitEmpresa);
+        return procesoCompartidoRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    private void registrarHistorial(Proceso proceso, Long idEmpleado, Map<String, Object> cambios) {
+        Empleado empleado = null;
+        if (idEmpleado != null) {
+            empleado = empleadoRepository.findByIdAndDeletedFalse(idEmpleado).orElse(null);
+        }
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(cambios);
+        } catch (JsonProcessingException e) {
+            json = cambios.toString();
+        }
+        HistorialProceso historial = HistorialProceso.builder()
+                .proceso(proceso)
+                .empleado(empleado)
+                .valorAnterior(null)
+                .valorNuevo(json)
+                .fechaCambio(LocalDateTime.now())
+                .tipoAccion("COMPARTIR")
+                .build();
+        historialProcesoRepository.save(historial);
+    }
+
+    private ProcesoCompartidoResponseDTO toDto(ProcesoCompartido pc) {
+        return ProcesoCompartidoResponseDTO.builder()
+                .id(pc.getId())
+                .procesoId(pc.getProceso().getId())
+                .poolId(pc.getPool().getId())
+                .permiso(pc.getPermiso())
+                .build();
+    }
+}

@@ -12,6 +12,7 @@ public class RolMapper {
         return Rol.builder()
                 .empresa(empresa)
                 .nombre(dto.getNombre())
+                .descripcion(dto.getDescripcion())
                 .permiso(dto.getPermiso())
                 .build();
     }
@@ -22,6 +23,7 @@ public class RolMapper {
                 .nitEmpresa(rol.getEmpresa().getNit())
                 .nombreEmpresa(rol.getEmpresa().getNombre())
                 .nombre(rol.getNombre())
+                .descripcion(rol.getDescripcion())
                 .permiso(rol.getPermiso())
                 .build();
     }

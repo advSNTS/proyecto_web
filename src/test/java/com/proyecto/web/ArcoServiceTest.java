@@ -2,12 +2,14 @@ package com.proyecto.web;
 
 import com.proyecto.web.dto.ArcoRequestDTO;
 import com.proyecto.web.dto.ArcoResponseDTO;
+import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.NodoRequestDTO;
 import com.proyecto.web.dto.NodoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.enums.TipoNodo;
 import com.proyecto.web.service.ArcoService;
+import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class ArcoServiceTest {
 
+    private static final String NIT = "900ARCO-SVC-1";
+
     @Autowired
     private ArcoService arcoService;
 
@@ -35,13 +39,23 @@ class ArcoServiceTest {
     @Autowired
     private ProcesoService procesoService;
 
+    @Autowired
+    private EmpresaService empresaService;
+
     private Long procesoId;
     private Long nodoOrigenId;
     private Long nodoDestinoId;
 
     @BeforeEach
     void setUp() {
+        EmpresaRequestDTO emp = new EmpresaRequestDTO();
+        emp.setNit(NIT);
+        emp.setNombre("Emp Arco");
+        emp.setCorreo("ea@test.com");
+        empresaService.crearEmpresa(emp);
+
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .nombre("Proceso Arco Test")
                 .descripcion("Descripción proceso arco")
                 .categoria("Categoría B")
@@ -53,6 +67,7 @@ class ArcoServiceTest {
         this.procesoId = proceso.getId();
 
         NodoRequestDTO nodoOrigen = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Origen")
@@ -64,6 +79,7 @@ class ArcoServiceTest {
         this.nodoOrigenId = origen.getId();
 
         NodoRequestDTO nodoDestino = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Destino")
@@ -75,15 +91,18 @@ class ArcoServiceTest {
         this.nodoDestinoId = destino.getId();
     }
 
-    @Test
-    void crearArco_deberiaRetornarArcoCreado() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
+    private ArcoRequestDTO arco(Long destinoId) {
+        return ArcoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
+                .nodoDestinoId(destinoId)
                 .build();
+    }
 
-        ArcoResponseDTO response = arcoService.crearArco(dto);
+    @Test
+    void crearArco_deberiaRetornarArcoCreado() {
+        ArcoResponseDTO response = arcoService.crearArco(arco(nodoDestinoId));
 
         assertNotNull(response);
         assertEquals(nodoOrigenId, response.getNodoOrigenId());
@@ -93,13 +112,7 @@ class ArcoServiceTest {
 
     @Test
     void obtenerArco_deberiaRetornarArcoExistente() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
-                .build();
-
-        ArcoResponseDTO creado = arcoService.crearArco(dto);
+        ArcoResponseDTO creado = arcoService.crearArco(arco(nodoDestinoId));
 
         ArcoResponseDTO response = arcoService.obtenerArco(creado.getId());
 
@@ -109,15 +122,9 @@ class ArcoServiceTest {
 
     @Test
     void obtenerPorProceso_deberiaRetornarArcosDelProceso() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
-                .build();
+        arcoService.crearArco(arco(nodoDestinoId));
 
-        arcoService.crearArco(dto);
-
-        List<ArcoResponseDTO> lista = arcoService.obtenerPorProceso(procesoId);
+        List<ArcoResponseDTO> lista = arcoService.obtenerPorProceso(procesoId, NIT);
 
         assertNotNull(lista);
         assertFalse(lista.isEmpty());
@@ -125,13 +132,7 @@ class ArcoServiceTest {
 
     @Test
     void obtenerSalientesDe_deberiaRetornarArcosSalientes() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
-                .build();
-
-        arcoService.crearArco(dto);
+        arcoService.crearArco(arco(nodoDestinoId));
 
         List<ArcoResponseDTO> lista = arcoService.obtenerSalientesDe(nodoOrigenId);
 
@@ -142,13 +143,7 @@ class ArcoServiceTest {
 
     @Test
     void obtenerEntrantesA_deberiaRetornarArcosEntrantes() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
-                .build();
-
-        arcoService.crearArco(dto);
+        arcoService.crearArco(arco(nodoDestinoId));
 
         List<ArcoResponseDTO> lista = arcoService.obtenerEntrantesA(nodoDestinoId);
 
@@ -160,6 +155,7 @@ class ArcoServiceTest {
     @Test
     void actualizarArco_deberiaRetornarArcoActualizado() {
         NodoRequestDTO nodoDestino3 = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Destino 3")
@@ -169,19 +165,9 @@ class ArcoServiceTest {
 
         NodoResponseDTO destino3 = nodoService.crearNodo(nodoDestino3);
 
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
-                .build();
+        ArcoResponseDTO creado = arcoService.crearArco(arco(nodoDestinoId));
 
-        ArcoResponseDTO creado = arcoService.crearArco(dto);
-
-        ArcoRequestDTO update = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(destino3.getId())
-                .build();
+        ArcoRequestDTO update = arco(destino3.getId());
 
         ArcoResponseDTO response = arcoService.actualizarArco(creado.getId(), update);
 
@@ -190,13 +176,7 @@ class ArcoServiceTest {
 
     @Test
     void eliminarArco_deberiaMarcarComoEliminado() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoDestinoId)
-                .build();
-
-        ArcoResponseDTO creado = arcoService.crearArco(dto);
+        ArcoResponseDTO creado = arcoService.crearArco(arco(nodoDestinoId));
 
         arcoService.eliminarArco(creado.getId());
 
@@ -206,11 +186,7 @@ class ArcoServiceTest {
 
     @Test
     void crearArco_conOrigenIgualADestino_deberiaLanzarBusinessException() {
-        ArcoRequestDTO dto = ArcoRequestDTO.builder()
-                .idProceso(procesoId)
-                .nodoOrigenId(nodoOrigenId)
-                .nodoDestinoId(nodoOrigenId)
-                .build();
+        ArcoRequestDTO dto = arco(nodoOrigenId);
 
         assertThrows(Exception.class, () -> arcoService.crearArco(dto));
     }

@@ -58,6 +58,7 @@ class EmpresaXProcesoServiceTest {
 
         // Crear proceso
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
+                .nitEmpresa(nitOwner)
                 .nombre("Proceso Test")
                 .descripcion("Descripción proceso test")
                 .categoria("Categoría C")

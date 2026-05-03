@@ -3,17 +3,12 @@ package com.proyecto.web.service;
 import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.EmpresaResponseDTO;
 import com.proyecto.web.entity.Empresa;
-import com.proyecto.web.entity.Pool;
 import com.proyecto.web.mapper.EmpresaMapper;
 import com.proyecto.web.repository.EmpresaRepository;
-import com.proyecto.web.repository.PoolRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmpresaService {
@@ -21,20 +16,10 @@ public class EmpresaService {
     private static final String EMPRESA_NO_ENCONTRADA = "Empresa no encontrada";
 
     private final EmpresaRepository empresaRepository;
-    private final PoolRepository poolRepository;
 
     public EmpresaResponseDTO crearEmpresa(EmpresaRequestDTO dto) {
         Empresa empresa = EmpresaMapper.toEntity(dto);
         empresa = empresaRepository.save(empresa);
-        Pool poolDefault = Pool.builder()
-                .empresa(empresa)
-                .nombre("Pool por defecto")
-                .descripcion("Creado automáticamente al registrar la empresa")
-                .esDefault(true)
-                .eliminado(false)
-                .build();
-        poolRepository.save(poolDefault);
-        log.info("Empresa y pool por defecto creados nit={}", empresa.getNit());
         return EmpresaMapper.toResponse(empresa);
     }
 

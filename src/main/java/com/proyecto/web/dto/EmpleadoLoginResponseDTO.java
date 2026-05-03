@@ -20,6 +20,4 @@ public class EmpleadoLoginResponseDTO {
     private TipoDocumento tipoDocumento;
     private String numeroDocumento;
     private String correo;
-    /** Presente cuando {@code app.security.enabled=true}. */
-    private String token;
 }

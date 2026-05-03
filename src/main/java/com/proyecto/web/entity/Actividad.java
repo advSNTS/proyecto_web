@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -35,13 +34,6 @@ public class Actividad {
  
     @Column(length = 255)
     private String descripcion;
-
-    @Column(name = "tipo_actividad", length = 100)
-    private String tipoActividad;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lane_id")
-    private Lane lane;
  
     @Column(nullable = false)
     @Builder.Default

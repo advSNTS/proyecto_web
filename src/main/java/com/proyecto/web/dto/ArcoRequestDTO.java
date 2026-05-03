@@ -12,7 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class ArcoRequestDTO {
-    private String nitEmpresa;
     private Long idProceso;
     private Long nodoOrigenId;
     private Long nodoDestinoId;

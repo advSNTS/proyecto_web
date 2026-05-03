@@ -48,9 +48,5 @@ public class Nodo {
 
     @Column(name = "coordenada_y", nullable = false)
     private Long coordenadaY;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean eliminado = false;
 }
  

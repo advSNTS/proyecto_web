@@ -1,12 +1,10 @@
 package com.proyecto.web;
 
-import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.NodoRequestDTO;
 import com.proyecto.web.dto.NodoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.enums.TipoNodo;
-import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,29 +23,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class NodoServiceTest {
 
-    private static final String NIT = "900NODO-SVC-1";
-
     @Autowired
     private NodoService nodoService;
 
     @Autowired
     private ProcesoService procesoService;
 
-    @Autowired
-    private EmpresaService empresaService;
-
     private Long procesoId;
 
     @BeforeEach
     void setUp() {
-        EmpresaRequestDTO emp = new EmpresaRequestDTO();
-        emp.setNit(NIT);
-        emp.setNombre("Emp Nodo");
-        emp.setCorreo("en@test.com");
-        empresaService.crearEmpresa(emp);
-
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
-                .nitEmpresa(NIT)
                 .nombre("Proceso Base Nodos")
                 .descripcion("Proceso para pruebas de nodos")
                 .categoria("Categoría Nodos")
@@ -59,20 +45,15 @@ class NodoServiceTest {
         this.procesoId = proceso.getId();
     }
 
-    private NodoRequestDTO nodo(TipoNodo tipo, String nombre, long x, long y) {
-        return NodoRequestDTO.builder()
-                .nitEmpresa(NIT)
-                .idProceso(procesoId)
-                .tipo(tipo)
-                .nombre(nombre)
-                .coordenadaX(x)
-                .coordenadaY(y)
-                .build();
-    }
-
     @Test
     void crearNodo_deberiaRetornarNodoCreado() {
-        NodoRequestDTO dto = nodo(TipoNodo.ACTIVIDAD, "Nodo Actividad 001", 0L, 0L);
+        NodoRequestDTO dto = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Nodo Actividad 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
         NodoResponseDTO response = nodoService.crearNodo(dto);
 
@@ -84,7 +65,13 @@ class NodoServiceTest {
 
     @Test
     void obtenerNodo_deberiaRetornarNodoExistente() {
-        NodoRequestDTO dto = nodo(TipoNodo.GATEWAY, "Nodo Gateway 001", 0L, 0L);
+        NodoRequestDTO dto = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.GATEWAY)
+                .nombre("Nodo Gateway 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
         NodoResponseDTO creado = nodoService.crearNodo(dto);
 
@@ -98,10 +85,26 @@ class NodoServiceTest {
 
     @Test
     void obtenerPorProceso_deberiaRetornarNodosDelProceso() {
-        nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Nodo Uno", 0L, 0L));
-        nodoService.crearNodo(nodo(TipoNodo.ARCO, "Nodo Dos", 0L, 0L));
+        NodoRequestDTO dto1 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Nodo Uno")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
-        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId, NIT);
+        NodoRequestDTO dto2 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ARCO)
+                .nombre("Nodo Dos")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        nodoService.crearNodo(dto1);
+        nodoService.crearNodo(dto2);
+
+        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId);
 
         assertNotNull(lista);
         assertTrue(lista.size() >= 2);
@@ -110,11 +113,35 @@ class NodoServiceTest {
 
     @Test
     void obtenerPorProcesoYTipo_deberiaRetornarNodosDelTipo() {
-        nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Actividad 001", 0L, 0L));
-        nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Actividad 002", 0L, 0L));
-        nodoService.crearNodo(nodo(TipoNodo.GATEWAY, "Gateway 001", 0L, 0L));
+        NodoRequestDTO dto1 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Actividad 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
-        List<NodoResponseDTO> listaActividades = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.ACTIVIDAD, NIT);
+        NodoRequestDTO dto2 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Actividad 002")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        NodoRequestDTO dto3 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.GATEWAY)
+                .nombre("Gateway 001")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        nodoService.crearNodo(dto1);
+        nodoService.crearNodo(dto2);
+        nodoService.crearNodo(dto3);
+
+        List<NodoResponseDTO> listaActividades = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.ACTIVIDAD);
 
         assertNotNull(listaActividades);
         assertTrue(listaActividades.size() >= 2);
@@ -123,9 +150,23 @@ class NodoServiceTest {
 
     @Test
     void actualizarNodo_deberiaRetornarNodoActualizado() {
-        NodoResponseDTO creado = nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Nodo Original", 0L, 0L));
+        NodoRequestDTO dto = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Nodo Original")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
-        NodoRequestDTO update = nodo(TipoNodo.GATEWAY, "Nodo Actualizado", 10L, 20L);
+        NodoResponseDTO creado = nodoService.crearNodo(dto);
+
+        NodoRequestDTO update = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.GATEWAY)
+                .nombre("Nodo Actualizado")
+                .coordenadaX(10L)
+                .coordenadaY(20L)
+                .build();
 
         NodoResponseDTO response = nodoService.actualizarNodo(creado.getId(), update);
 
@@ -134,10 +175,18 @@ class NodoServiceTest {
     }
 
     @Test
-    void eliminarNodo_deberiaMarcarEliminado() {
-        NodoResponseDTO creado = nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Nodo Para Eliminar", 0L, 0L));
+    void eliminarNodo_deberiaEliminarNodoHardDelete() {
+        NodoRequestDTO dto = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Nodo Para Eliminar")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
-        nodoService.eliminarNodo(creado.getId(), NIT);
+        NodoResponseDTO creado = nodoService.crearNodo(dto);
+
+        nodoService.eliminarNodo(creado.getId());
 
         Long id = creado.getId();
         assertThrows(RuntimeException.class, () -> nodoService.obtenerNodo(id));
@@ -145,9 +194,17 @@ class NodoServiceTest {
 
     @Test
     void obtenerPorProcesoYTipo_gateway_deberiaRetornarGateways() {
-        nodoService.crearNodo(nodo(TipoNodo.GATEWAY, "Gateway Test", 0L, 0L));
+        NodoRequestDTO dtoGateway = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.GATEWAY)
+                .nombre("Gateway Test")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
-        List<NodoResponseDTO> listaGateways = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.GATEWAY, NIT);
+        nodoService.crearNodo(dtoGateway);
+
+        List<NodoResponseDTO> listaGateways = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.GATEWAY);
 
         assertNotNull(listaGateways);
         assertFalse(listaGateways.isEmpty());
@@ -156,11 +213,39 @@ class NodoServiceTest {
 
     @Test
     void crearMultiplesNodos_deberiaCrearTodosExitosamente() {
-        nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Inicio", 0L, 0L));
-        nodoService.crearNodo(nodo(TipoNodo.ARCO, "Transición", 0L, 0L));
-        nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Fin", 0L, 0L));
+        NodoRequestDTO dto1 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Inicio")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
 
-        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId, NIT);
+        NodoRequestDTO dto2 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ARCO)
+                .nombre("Transición")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        NodoRequestDTO dto3 = NodoRequestDTO.builder()
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Fin")
+                .coordenadaX(0L)
+                .coordenadaY(0L)
+                .build();
+
+        NodoResponseDTO nodo1 = nodoService.crearNodo(dto1);
+        NodoResponseDTO nodo2 = nodoService.crearNodo(dto2);
+        NodoResponseDTO nodo3 = nodoService.crearNodo(dto3);
+
+        assertNotNull(nodo1.getId());
+        assertNotNull(nodo2.getId());
+        assertNotNull(nodo3.getId());
+
+        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId);
         assertTrue(lista.size() >= 3);
     }
 }

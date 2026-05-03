@@ -45,8 +45,9 @@ jobs:
           IMAGE: ghcr.io/${{ github.repository }}
         run: |
           IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
-          docker build -t ${IMAGE_LOWER}:latest .
+          docker build -t ${IMAGE_LOWER}:latest -t ${IMAGE_LOWER}:${{ github.sha }} .
           docker push ${IMAGE_LOWER}:latest
+          docker push ${IMAGE_LOWER}:${{ github.sha }}
 
   deploy-onpremise:
     name: Deploy on MicroK8s On-Premise
@@ -56,20 +57,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Apply Kubernetes deployment
-        run: sudo microk8s kubectl apply -f k8s/deployment.yaml
-
-      - name: Restart Kubernetes deployment
-        run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11
-
-      - name: Wait for rollout to complete
-        run: sudo microk8s kubectl rollout status deployment/proyecto-web -n grupo11 -t 300s
-
-      - name: Debug pod status if deployment fails
-        if: failure()
+      - name: Limpiar pods pendientes y terminating
         run: |
-          echo "=== Pod Events ==="
-          sudo microk8s kubectl describe pod -n grupo11 -l app=proyecto-web
-          echo ""
-          echo "=== Pod Logs ==="
-          sudo microk8s kubectl logs -n grupo11 -l app=proyecto-web --all-containers=true --tail=50
+          sudo microk8s kubectl delete pods -n grupo11 \
+            --field-selector=status.phase=Pending \
+            --grace-period=0 --force 2>/dev/null || true
+          sudo microk8s kubectl delete pods -n grupo11 \
+            $(sudo microk8s kubectl get pods -n grupo11 | grep Terminating | awk '{print $1}') \
+            --grace-period=0 --force 2>/dev/null || true
+
+      - name: Deploy con SHA tag
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          sudo microk8s kubectl set image deployment/proyecto-web \
+            proyecto-web=${IMAGE_LOWER}:${{ github.sha }} \
+            -n grupo11
+          sudo microk8s kubectl rollout status deployment/proyecto-web \
+            -n grupo11 --timeout=120s

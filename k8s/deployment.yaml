@@ -16,7 +16,6 @@ spec:
       containers:
       - name: proyecto-web
         image: ghcr.io/advsnts/proyecto_web:latest
-        imagePullPolicy: Always  # Fuerza pull de nueva imagen
         ports:
         - containerPort: 8080
         env:

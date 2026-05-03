@@ -61,3 +61,15 @@ jobs:
 
       - name: Restart Kubernetes deployment
         run: sudo microk8s kubectl rollout restart deployment/proyecto-web -n grupo11
+
+      - name: Wait for rollout to complete
+        run: sudo microk8s kubectl rollout status deployment/proyecto-web -n grupo11 -t 300s
+
+      - name: Debug pod status if deployment fails
+        if: failure()
+        run: |
+          echo "=== Pod Events ==="
+          sudo microk8s kubectl describe pod -n grupo11 -l app=proyecto-web
+          echo ""
+          echo "=== Pod Logs ==="
+          sudo microk8s kubectl logs -n grupo11 -l app=proyecto-web --all-containers=true --tail=50

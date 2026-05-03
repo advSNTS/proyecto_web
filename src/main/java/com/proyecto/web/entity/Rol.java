@@ -22,9 +22,6 @@ public class Rol {
     private Empresa empresa;
  
     private String nombre;
-
-    @Column(length = 500)
-    private String descripcion;
  
     @Enumerated(EnumType.STRING)
     private Permiso permiso;

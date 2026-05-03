@@ -21,8 +21,6 @@ public interface RequiereRepository extends JpaRepository<Requiere, RequiereId> 
  
     // Validar duplicado antes de asignar
     boolean existsByActividad_IdAndRol_IdAndDeletedFalse(Long actividadId, Long rolId);
-
-    boolean existsByRol_IdAndDeletedFalse(Long rolId);
  
     // Cascada desde EmpresaXProceso: todos los Requiere donde el rol es de
     // una empresa concreta y la actividad pertenece a un proceso concreto

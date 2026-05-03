@@ -6,7 +6,6 @@ import com.proyecto.web.entity.Empresa;
 import com.proyecto.web.entity.EmpresaXProceso;
 import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.entity.Requiere;
-import com.proyecto.web.enums.EstadoProceso;
 import com.proyecto.web.mapper.EmpresaXProcesoMapper;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.EmpresaXProcesoRepository;
@@ -35,9 +34,8 @@ public class EmpresaXProcesoService {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
                 .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
  
-        Proceso proceso = procesoRepository
-                .findByIdAndEmpresa_NitAndEstadoNot(dto.getIdProceso(), dto.getNitOwner(), EstadoProceso.INACTIVO)
-                .orElseThrow(() -> new RuntimeException("Proceso no encontrado o no pertenece al owner"));
+        Proceso proceso = procesoRepository.findByIdAndActivoTrue(dto.getIdProceso())
+                .orElseThrow(() -> new RuntimeException("Proceso no encontrado"));
  
         Empresa owner = empresaRepository.findByNitAndDeletedFalse(dto.getNitOwner())
                 .orElseThrow(() -> new RuntimeException("Empresa owner no encontrada"));

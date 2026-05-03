@@ -84,7 +84,7 @@ class EmpleadoControllerTest {
                         .build())
                 .build();
 
-        mockMvc.perform(post("/api/empleados")
+        mockMvc.perform(post("/empleados")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -95,7 +95,7 @@ class EmpleadoControllerTest {
 
     @Test
     void listarEmpleados_retorna200ConContenido() throws Exception {
-        mockMvc.perform(get("/api/empleados")
+        mockMvc.perform(get("/empleados")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -104,7 +104,7 @@ class EmpleadoControllerTest {
 
     @Test
     void listarPorEmpresa_retorna200() throws Exception {
-        mockMvc.perform(get("/api/empleados/empresa/" + nitEmpresa)
+        mockMvc.perform(get("/empleados/empresa/" + nitEmpresa)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
@@ -112,7 +112,7 @@ class EmpleadoControllerTest {
 
     @Test
     void obtenerEmpleadoPorId_retorna200() throws Exception {
-        mockMvc.perform(get("/api/empleados/" + empleadoId)
+        mockMvc.perform(get("/empleados/" + empleadoId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Juan Test"))
@@ -122,7 +122,7 @@ class EmpleadoControllerTest {
 
     @Test
     void obtenerEmpleadoInexistente_retorna404() throws Exception {
-        mockMvc.perform(get("/api/empleados/99999")
+        mockMvc.perform(get("/empleados/99999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -140,7 +140,7 @@ class EmpleadoControllerTest {
                         .build())
                 .build();
 
-        mockMvc.perform(put("/api/empleados/" + empleadoId)
+        mockMvc.perform(put("/empleados/" + empleadoId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
@@ -149,12 +149,12 @@ class EmpleadoControllerTest {
 
     @Test
     void eliminarEmpleado_retorna200() throws Exception {
-        mockMvc.perform(delete("/api/empleados/" + empleadoId)
+        mockMvc.perform(delete("/empleados/" + empleadoId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // Verificar que ya no existe
-        mockMvc.perform(get("/api/empleados/" + empleadoId))
+        mockMvc.perform(get("/empleados/" + empleadoId))
                 .andExpect(status().isNotFound());
     }
 }

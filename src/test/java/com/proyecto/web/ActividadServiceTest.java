@@ -2,14 +2,12 @@ package com.proyecto.web;
 
 import com.proyecto.web.dto.ActividadRequestDTO;
 import com.proyecto.web.dto.ActividadResponseDTO;
-import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.NodoRequestDTO;
 import com.proyecto.web.dto.NodoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.enums.TipoNodo;
 import com.proyecto.web.service.ActividadService;
-import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class ActividadServiceTest {
 
-    private static final String NIT = "900ACT-SVC-1";
-
     @Autowired
     private ActividadService actividadService;
 
@@ -39,22 +35,12 @@ class ActividadServiceTest {
     @Autowired
     private ProcesoService procesoService;
 
-    @Autowired
-    private EmpresaService empresaService;
-
     private Long procesoId;
     private Long nodoId;
 
     @BeforeEach
     void setUp() {
-        EmpresaRequestDTO emp = new EmpresaRequestDTO();
-        emp.setNit(NIT);
-        emp.setNombre("Emp Act");
-        emp.setCorreo("ea@test.com");
-        empresaService.crearEmpresa(emp);
-
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
-                .nitEmpresa(NIT)
                 .nombre("Proceso Test")
                 .descripcion("Descripción proceso test")
                 .categoria("Categoría A")
@@ -66,7 +52,6 @@ class ActividadServiceTest {
         this.procesoId = proceso.getId();
 
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
-                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Actividad 1")
@@ -116,7 +101,6 @@ class ActividadServiceTest {
                 .build();
 
         NodoRequestDTO nodoDTO2 = NodoRequestDTO.builder()
-                .nitEmpresa(NIT)
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Actividad 2")

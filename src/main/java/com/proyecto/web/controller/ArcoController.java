@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/arcos")
+@RequestMapping("/arcos")
 @RequiredArgsConstructor
 public class ArcoController {
 
@@ -28,10 +28,8 @@ public class ArcoController {
 
     // Todos los arcos de un proceso
     @GetMapping("/proceso/{idProceso}")
-    public ResponseEntity<List<ArcoResponseDTO>> porProceso(
-            @PathVariable Long idProceso,
-            @RequestParam String nitEmpresa) {
-        return ResponseEntity.ok(arcoService.obtenerPorProceso(idProceso, nitEmpresa));
+    public ResponseEntity<List<ArcoResponseDTO>> porProceso(@PathVariable Long idProceso) {
+        return ResponseEntity.ok(arcoService.obtenerPorProceso(idProceso));
     }
 
     // Arcos que salen de un nodo

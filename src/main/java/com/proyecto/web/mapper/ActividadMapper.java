@@ -13,7 +13,6 @@ public class ActividadMapper {
         return Actividad.builder()
                 .nodo(nodo)
                 .descripcion(dto.getDescripcion())
-                .tipoActividad(dto.getTipoActividad())
                 .build();
     }
  
@@ -25,8 +24,6 @@ public class ActividadMapper {
                 .procesoId(actividad.getNodo().getProceso().getId())
                 .nombreProceso(actividad.getNodo().getProceso().getNombre())
                 .descripcion(actividad.getDescripcion())
-                .tipoActividad(actividad.getTipoActividad())
-                .laneId(actividad.getLane() != null ? actividad.getLane().getId() : null)
                 .build();
     }
 }

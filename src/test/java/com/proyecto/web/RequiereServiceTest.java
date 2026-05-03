@@ -71,7 +71,6 @@ class RequiereServiceTest {
         empresaService.crearEmpresa(empresaDTO);
 
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
-                .nitEmpresa("NIT-REQ-001")
                 .nombre("Proceso Requiere Test")
                 .descripcion("Descripción proceso requiere")
                 .categoria("Categoría D")
@@ -92,7 +91,6 @@ class RequiereServiceTest {
         empresaXProcesoService.asignarProceso(empresaXProcesoDTO);
 
         NodoRequestDTO nodoDTO = NodoRequestDTO.builder()
-                .nitEmpresa("NIT-REQ-001")
                 .idProceso(procesoId)
                 .tipo(TipoNodo.ACTIVIDAD)
                 .nombre("Nodo Requiere")

@@ -54,7 +54,7 @@ class EmpresaControllerTest {
         dto.setNombre("Nueva Empresa");
         dto.setCorreo("nueva@test.com");
 
-        mockMvc.perform(post("/empresas")
+        mockMvc.perform(post("/api/empresas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ class EmpresaControllerTest {
 
     @Test
     void listarEmpresas_retorna200ConContenido() throws Exception {
-        mockMvc.perform(get("/empresas")
+        mockMvc.perform(get("/api/empresas")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -74,7 +74,7 @@ class EmpresaControllerTest {
 
     @Test
     void obtenerEmpresaPorNit_retorna200() throws Exception {
-        mockMvc.perform(get("/empresas/" + nitTest)
+        mockMvc.perform(get("/api/empresas/" + nitTest)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nit").value(nitTest))
@@ -84,7 +84,7 @@ class EmpresaControllerTest {
 
     @Test
     void obtenerEmpresaInexistente_retorna404() throws Exception {
-        mockMvc.perform(get("/empresas/NIT-INEXISTENTE")
+        mockMvc.perform(get("/api/empresas/NIT-INEXISTENTE")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -95,7 +95,7 @@ class EmpresaControllerTest {
         updateDTO.setNombre("Nombre Actualizado");
         updateDTO.setCorreo("actualizado@test.com");
 
-        mockMvc.perform(put("/empresas/" + nitTest)
+        mockMvc.perform(put("/api/empresas/" + nitTest)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
@@ -105,12 +105,12 @@ class EmpresaControllerTest {
 
     @Test
     void eliminarEmpresa_retorna200() throws Exception {
-        mockMvc.perform(delete("/empresas/" + nitTest)
+        mockMvc.perform(delete("/api/empresas/" + nitTest)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
         // Verificar que ya no existe
-        mockMvc.perform(get("/empresas/" + nitTest))
+        mockMvc.perform(get("/api/empresas/" + nitTest))
                 .andExpect(status().isNotFound());
     }
 }

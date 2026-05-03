@@ -19,5 +19,12 @@ public interface ArcoRepository extends JpaRepository<Arco, Long> {
     // Validar que no exista ya ese arco en el mismo proceso
     boolean existsByProceso_IdAndNodoOrigen_IdAndNodoDestino_Id(
             Long idProceso, Long nodoOrigenId, Long nodoDestinoId);
+
+    boolean existsByProceso_IdAndNodoOrigen_IdAndNodoDestino_IdAndEliminadoFalse(
+            Long idProceso, Long nodoOrigenId, Long nodoDestinoId);
+
+    List<Arco> findAllByProceso_IdAndEliminadoFalse(Long idProceso);
+
+    List<Arco> findAllByNodoOrigen_IdOrNodoDestino_IdAndEliminadoFalse(Long origenId, Long destinoId);
 }
  

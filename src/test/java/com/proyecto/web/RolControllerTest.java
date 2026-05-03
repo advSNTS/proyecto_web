@@ -72,7 +72,7 @@ class RolControllerTest {
                 .permiso(Permiso.EDITAR)
                 .build();
 
-        mockMvc.perform(post("/roles")
+        mockMvc.perform(post("/api/roles-proceso")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -83,7 +83,7 @@ class RolControllerTest {
 
     @Test
     void obtenerTodosRoles_retorna200ConContenido() throws Exception {
-        mockMvc.perform(get("/roles")
+        mockMvc.perform(get("/api/roles-proceso")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))))
@@ -92,7 +92,7 @@ class RolControllerTest {
 
     @Test
     void obtenerRolesPorEmpresa_retorna200() throws Exception {
-        mockMvc.perform(get("/roles/empresa/" + nitEmpresa)
+        mockMvc.perform(get("/api/roles-proceso/empresa/" + nitEmpresa)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
@@ -100,7 +100,7 @@ class RolControllerTest {
 
     @Test
     void obtenerRolPorId_retorna200() throws Exception {
-        mockMvc.perform(get("/roles/" + rolId)
+        mockMvc.perform(get("/api/roles-proceso/" + rolId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Rol Test"))
@@ -111,7 +111,7 @@ class RolControllerTest {
 
     @Test
     void obtenerRolInexistente_retorna404() throws Exception {
-        mockMvc.perform(get("/roles/99999")
+        mockMvc.perform(get("/api/roles-proceso/99999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -124,7 +124,7 @@ class RolControllerTest {
                 .permiso(Permiso.VER)
                 .build();
 
-        mockMvc.perform(put("/roles/" + rolId)
+        mockMvc.perform(put("/api/roles-proceso/" + rolId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
@@ -134,12 +134,12 @@ class RolControllerTest {
 
     @Test
     void eliminarRol_retorna204() throws Exception {
-        mockMvc.perform(delete("/roles/" + rolId)
+        mockMvc.perform(delete("/api/roles-proceso/" + rolId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         // Verificar que ya no existe
-        mockMvc.perform(get("/roles/" + rolId))
+        mockMvc.perform(get("/api/roles-proceso/" + rolId))
                 .andExpect(status().isNotFound());
     }
 }

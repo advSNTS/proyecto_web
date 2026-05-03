@@ -1,18 +1,22 @@
 package com.proyecto.web.repository;
- 
+
 import com.proyecto.web.entity.Proceso;
+import com.proyecto.web.enums.EstadoProceso;
 import org.springframework.data.jpa.repository.JpaRepository;
- 
+
 import java.util.List;
 import java.util.Optional;
- 
+
 public interface ProcesoRepository extends JpaRepository<Proceso, Long> {
- 
-    // Activos (borrador=false, activo=true)
-    List<Proceso> findAllByActivoTrue();
- 
-    Optional<Proceso> findByIdAndActivoTrue(Long id);
- 
-    List<Proceso> findAllByCategoria(String categoria);
+
+    List<Proceso> findAllByEstadoNot(EstadoProceso estado);
+
+    Optional<Proceso> findByIdAndEstadoNot(Long id, EstadoProceso estado);
+
+    List<Proceso> findAllByCategoriaAndEstadoNot(String categoria, EstadoProceso estado);
+
+    List<Proceso> findAllByEmpresa_NitAndEstadoNot(String nit, EstadoProceso estado);
+
+    Optional<Proceso> findByIdAndEmpresa_NitAndEstadoNot(Long id, String nit, EstadoProceso estado);
 }
  

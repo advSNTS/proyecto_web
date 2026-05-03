@@ -14,5 +14,7 @@ import lombok.Setter;
 public class ActividadRequestDTO {
     private Long nodoId;
     private String descripcion;
+    private String tipoActividad;
+    private Long laneId;
 }
  

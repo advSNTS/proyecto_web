@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,6 +14,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -26,13 +32,41 @@ public class SecurityConfig {
     private boolean securityEnabled;
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:4200",
+                "http://127.0.0.1:4200",
+                "http://localhost:9876"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
+        http.cors(Customizer.withDefaults());
         if (securityEnabled) {
             http.sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/empresas").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/empleados/login").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/empresas", "/api/empleados").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/empleados").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/empleados/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.PUT, "/api/empleados/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/empleados/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/procesos/*/compartir").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.DELETE, "/api/procesos/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/**").hasAnyRole("ADMIN", "EDITOR")
+                            .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("ADMIN", "EDITOR")
+                            .requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("ADMIN", "EDITOR")
+                            .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
                             .anyRequest().authenticated())
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         } else {

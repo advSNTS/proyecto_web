@@ -15,5 +15,6 @@ public class EmpresaRequestDTO {
     private String nit;
     private String nombre;
     private String correo;
-    
+    /** Opcional. Si se omite, se usa la contraseña inicial por defecto del sistema (ver documentación). */
+    private String contrasenaAdministrador;
 }

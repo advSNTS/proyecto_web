@@ -2,8 +2,10 @@ package com.proyecto.web.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.proyecto.web.dto.HistorialProcesoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
+import com.proyecto.web.mapper.HistorialProcesoMapper;
 import com.proyecto.web.entity.Empleado;
 import com.proyecto.web.entity.Empresa;
 import com.proyecto.web.entity.HistorialProceso;
@@ -112,6 +114,14 @@ public class ProcesoService {
 
     public List<HistorialProceso> obtenerHistorialDeProceso(Long idProceso) {
         return historialProcesoRepository.findAllByProceso_IdOrderByFechaCambioDesc(idProceso);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, String nitEmpresa) {
+        buscarVigente(idProceso, nitEmpresa);
+        return historialProcesoRepository.findAllByProceso_IdOrderByFechaCambioDesc(idProceso).stream()
+                .map(HistorialProcesoMapper::toResponse)
+                .toList();
     }
 
     public Proceso buscarVigente(Long id, String nitEmpresa) {

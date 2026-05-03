@@ -57,14 +57,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Limpiar pods pendientes y terminating
+      - name: Limpiar pods pendientes
         run: |
           sudo microk8s kubectl delete pods -n grupo11 \
             --field-selector=status.phase=Pending \
             --grace-period=0 --force 2>/dev/null || true
-          sudo microk8s kubectl delete pods -n grupo11 \
-            $(sudo microk8s kubectl get pods -n grupo11 | grep Terminating | awk '{print $1}') \
-            --grace-period=0 --force 2>/dev/null || true
+
+      - name: Pre-cargar imagen en containerd
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+          sudo microk8s ctr images pull ${IMAGE_LOWER}:${{ github.sha }}
 
       - name: Deploy con SHA tag
         env:

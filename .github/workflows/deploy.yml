@@ -63,13 +63,6 @@ jobs:
             --field-selector=status.phase=Pending \
             --grace-period=0 --force 2>/dev/null || true
 
-      - name: Pre-cargar imagen en containerd
-        env:
-          IMAGE: ghcr.io/${{ github.repository }}
-        run: |
-          IMAGE_LOWER=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
-          sudo microk8s ctr images pull ${IMAGE_LOWER}:${{ github.sha }}
-
       - name: Deploy con SHA tag
         env:
           IMAGE: ghcr.io/${{ github.repository }}
@@ -78,5 +71,8 @@ jobs:
           sudo microk8s kubectl set image deployment/proyecto-web \
             proyecto-web=${IMAGE_LOWER}:${{ github.sha }} \
             -n grupo11
+
+      - name: Esperar rollout (10 minutos)
+        run: |
           sudo microk8s kubectl rollout status deployment/proyecto-web \
-            -n grupo11 --timeout=120s
+            -n grupo11 --timeout=600s

@@ -37,11 +37,12 @@ public class EmpleadoService {
     private static final String CREDENCIALES_INVALIDAS = "Credenciales invalidas";
 
     private final EmpleadoRepository empleadoRepository;
-    private final EmpresaRepository empresaRepository;
-    private final CredencialRepository credencialRepository;
-    private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
-    private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
+private final EmpresaRepository empresaRepository;
+private final CredencialRepository credencialRepository;
+private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
+private final JwtService jwtService;
+private final PasswordEncoder passwordEncoder;
+private final VerificacionCorreoService verificacionCorreoService;
 
     @Value("${app.security.enabled:true}")
     private boolean securityEnabled;
@@ -58,13 +59,16 @@ public class EmpleadoService {
         empleado = empleadoRepository.save(empleado); // necesita ID antes de crear credencial
 
         Credencial credencial = Credencial.builder()
-                .empleado(empleado)
-                .correo(dto.getCredencial().getCorreo())
-                .contrasena(passwordEncoder.encode(dto.getCredencial().getContrasena()))
-                .build();
-        credencialRepository.save(credencial);
+        .empleado(empleado)
+        .correo(dto.getCredencial().getCorreo().trim())
+        .contrasena(passwordEncoder.encode(dto.getCredencial().getContrasena()))
+        .verificado(false)
+        .build();
 
-        empleado.setCredencial(credencial);
+credencialRepository.save(credencial);
+verificacionCorreoService.crearTokenYEnviar(credencial, empleado.getNombre());
+
+empleado.setCredencial(credencial);
 
         empleadoRolSistemaRepository.save(EmpleadoRolSistema.builder()
                 .empleado(empleado)
@@ -110,12 +114,30 @@ public class EmpleadoService {
         empleado.setNumeroDocumento(dto.getNumeroDocumento());
 
         if (dto.getCredencial() != null && empleado.getCredencial() != null) {
-            empleado.getCredencial().setCorreo(dto.getCredencial().getCorreo());
-            if (dto.getCredencial().getContrasena() != null && !dto.getCredencial().getContrasena().isBlank()) {
-                empleado.getCredencial().setContrasena(passwordEncoder.encode(dto.getCredencial().getContrasena()));
+    Credencial credencial = empleado.getCredencial();
+
+    if (dto.getCredencial().getCorreo() != null && !dto.getCredencial().getCorreo().isBlank()) {
+        String nuevoCorreo = dto.getCredencial().getCorreo().trim();
+
+        if (!nuevoCorreo.equalsIgnoreCase(credencial.getCorreo())) {
+            if (credencialRepository.existsByCorreo(nuevoCorreo)) {
+                throw new BusinessException("Ya existe un usuario con ese correo", HttpStatus.CONFLICT);
             }
-            credencialRepository.save(empleado.getCredencial());
+
+            credencial.setCorreo(nuevoCorreo);
+            credencial.setVerificado(false);
+            credencial.setFechaVerificacion(null);
+            credencialRepository.save(credencial);
+
+            verificacionCorreoService.crearTokenYEnviar(credencial, empleado.getNombre());
         }
+    }
+
+    if (dto.getCredencial().getContrasena() != null && !dto.getCredencial().getContrasena().isBlank()) {
+        credencial.setContrasena(passwordEncoder.encode(dto.getCredencial().getContrasena()));
+        credencialRepository.save(credencial);
+    }
+}
 
         return EmpleadoMapper.toResponse(empleadoRepository.save(empleado));
     }
@@ -138,14 +160,20 @@ public class EmpleadoService {
         }
 
         String stored = credencial.getContrasena();
-        boolean passwordOk = stored != null
-                && (passwordEncoder.matches(dto.getContrasena(), stored)
-                || stored.equals(dto.getContrasena()));
-        if (!passwordOk) {
-            throw new AuthenticationException(CREDENCIALES_INVALIDAS);
-        }
+boolean passwordOk = stored != null
+        && (passwordEncoder.matches(dto.getContrasena(), stored)
+        || stored.equals(dto.getContrasena()));
 
-        String token = null;
+if (!passwordOk) {
+    throw new AuthenticationException(CREDENCIALES_INVALIDAS);
+}
+
+if (!credencial.isVerificado()) {
+    throw new AuthenticationException("Debe verificar su correo antes de iniciar sesion.");
+}
+
+String token = null;
+
         if (securityEnabled) {
             List<TipoRolSistema> roles = empleadoRolSistemaRepository.findAllByEmpleado_IdAndEliminadoFalse(empleado.getId())
                     .stream()

@@ -57,8 +57,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/empresas").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/empleados/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/empresas").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/empleados/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/verificar-correo").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/reenviar-verificacion").permitAll()
+                        .requestMatchers("/error").permitAll()
 
                         // Solo ADMIN puede gestionar empleados y asignar roles
                         .requestMatchers(HttpMethod.POST, "/api/empleados").hasRole("ADMIN")

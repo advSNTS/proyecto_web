@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: proyecto-web
-  namespace: grupo11        # ← el profe te asigna este valor
+  namespace: grupo11
 spec:
   replicas: 1
   selector:
@@ -47,6 +47,31 @@ spec:
             configMapKeyRef:
               name: backend-pablito
               key: DB_PASSWORD
+
+        # ===============================
+        # CONFIGURACION CORREO
+        # ===============================
+        - name: APP_MAIL_ENABLED
+          value: "true"
+        - name: APP_MAIL_FROM
+          value: "luisylosbugs@gmail.com"
+        - name: APP_FRONTEND_BASE_URL
+          value: "https://grupo11.inphotech.co/front"
+
+        # ===============================
+        # SMTP
+        # ===============================
+        - name: MAIL_HOST
+          value: "smtp.gmail.com"
+        - name: MAIL_PORT
+          value: "587"
+        - name: MAIL_USERNAME
+          value: "luisylosbugs@gmail.com"
+        - name: MAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gmail-smtp-secret
+              key: MAIL_PASSWORD
 ---
 apiVersion: v1
 kind: Service

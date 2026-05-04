@@ -10,5 +10,7 @@ public interface CredencialRepository extends JpaRepository<Credencial, Long> {
 
     Optional<Credencial> findByCorreo(String correo);
 
+    Optional<Credencial> findByTokenVerificacion(String tokenVerificacion);
+
     boolean existsByCorreo(String correo);
 }

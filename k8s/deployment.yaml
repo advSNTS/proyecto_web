@@ -56,7 +56,7 @@ spec:
         - name: APP_MAIL_FROM
           value: "luisylosbugs@gmail.com"
         - name: APP_FRONTEND_BASE_URL
-          value: "https://grupo11.inphotech.co"
+          value: "https://grupo11.inphotech.co/front"
 
         # ===============================
         # SMTP

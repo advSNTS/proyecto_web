@@ -39,6 +39,7 @@ public class EmpresaService {
     private final CredencialRepository credencialRepository;
     private final EmpleadoRolSistemaRepository empleadoRolSistemaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final VerificacionCorreoService verificacionCorreoService;
 
     @Transactional
     public EmpresaResponseDTO crearEmpresa(EmpresaRequestDTO dto) {
@@ -83,11 +84,14 @@ public class EmpresaService {
         admin = empleadoRepository.save(admin);
 
         Credencial credencial = Credencial.builder()
-                .empleado(admin)
-                .correo(dto.getCorreo().trim())
-                .contrasena(passwordEncoder.encode(passwordPlano))
-                .build();
-        credencialRepository.save(credencial);
+        .empleado(admin)
+        .correo(dto.getCorreo().trim())
+        .contrasena(passwordEncoder.encode(passwordPlano))
+        .verificado(false)
+        .build();
+
+credencialRepository.save(credencial);
+verificacionCorreoService.crearTokenYEnviar(credencial, admin.getNombre());
 
         empleadoRolSistemaRepository.save(EmpleadoRolSistema.builder()
                 .empleado(admin)
@@ -99,16 +103,16 @@ public class EmpresaService {
         log.info("Empresa, pool y administrador creados nit={} correoAdmin={}", empresa.getNit(), dto.getCorreo());
 
         EmpresaResponseDTO response = EmpresaMapper.toResponse(empresa);
-        if (passwordAutogenerada) {
-            response.setMensajeRegistro(
-                    "Registro exitoso. El usuario administrador usa el correo de contacto de la empresa y la "
-                            + "contraseña inicial definida en la guía del proyecto (entorno de desarrollo). "
-                            + "Cambie la contraseña tras el primer inicio de sesión.");
-        } else {
-            response.setMensajeRegistro(
-                    "Registro exitoso. El administrador puede iniciar sesión con el correo de contacto y la "
-                            + "contraseña indicada en el registro.");
-        }
+       if (passwordAutogenerada) {
+    response.setMensajeRegistro(
+            "Registro exitoso. El usuario administrador usa el correo de contacto de la empresa y la "
+                    + "contraseña inicial definida en la guía del proyecto. "
+                    + "Antes de iniciar sesión debe verificar su correo.");
+} else {
+    response.setMensajeRegistro(
+            "Registro exitoso. Enviamos un correo de verificación al correo de contacto. "
+                    + "El administrador debe verificar su correo antes de iniciar sesión.");
+}
         return response;
     }
 

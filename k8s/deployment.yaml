@@ -52,7 +52,7 @@ spec:
         # CONFIGURACION CORREO
         # ===============================
         - name: APP_MAIL_ENABLED
-          value: "false"
+          value: "true"
         - name: APP_MAIL_FROM
           value: "luisylosbugs@gmail.com"
         - name: APP_FRONTEND_BASE_URL
@@ -68,7 +68,10 @@ spec:
         - name: MAIL_USERNAME
           value: "luisylosbugs@gmail.com"
         - name: MAIL_PASSWORD
-          value: ""
+          valueFrom:
+            secretKeyRef:
+              name: gmail-smtp-secret
+              key: MAIL_PASSWORD
 ---
 apiVersion: v1
 kind: Service

@@ -28,18 +28,23 @@ public class VerificacionCorreoService {
     private String frontendBaseUrl;
 
     @Transactional
-    public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) {
-        credencial.setVerificado(false);
-        credencial.setFechaVerificacion(null);
-        credencial.setTokenVerificacion(generarTokenSeguro());
-        credencialRepository.save(credencial);
+public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) {
+    credencial.setVerificado(false);
+    credencial.setFechaVerificacion(null);
+    credencial.setTokenVerificacion(generarTokenSeguro());
+    credencialRepository.save(credencial);
 
-        correoService.enviarCorreoVerificacion(
-                credencial.getCorreo(),
-                nombreDestinatario,
-                construirUrlVerificacion(credencial.getTokenVerificacion())
-        );
-    }
+    String enlace = construirUrlVerificacion(credencial.getTokenVerificacion());
+
+    System.out.println("DEBUG VERIFICACION CORREO -> correo=" + credencial.getCorreo());
+    System.out.println("DEBUG VERIFICACION CORREO -> enlace=" + enlace);
+
+    correoService.enviarCorreoVerificacion(
+            credencial.getCorreo(),
+            nombreDestinatario,
+            enlace
+    );
+}
 
     @Transactional
     public VerificacionCorreoResponseDTO verificarCorreo(String token) {

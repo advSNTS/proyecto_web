@@ -23,6 +23,13 @@ public class CorreoService {
     private String remitente;
 
     public void enviarCorreoVerificacion(String destinatario, String nombre, String enlaceVerificacion) {
+       log.info("ENTRANDO A CorreoService.enviarCorreoVerificacion destinatario={} mailEnabled={} remitente={}",
+        destinatario,
+        mailEnabled,
+        remitente);
+       
+       
+       
         if (!mailEnabled) {
             log.info("Correo desactivado. Enlace de verificacion para {}: {}", destinatario, enlaceVerificacion);
             return;

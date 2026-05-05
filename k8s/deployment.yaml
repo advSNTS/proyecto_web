@@ -69,8 +69,8 @@ spec:
           value: "luisylosbugs@gmail.com"
         - name: MAIL_PASSWORD
           valueFrom:
-            secretKeyRef:
-              name: gmail-smtp-secret
+            configMapKeyRef:
+              name: back-end-santi
               key: MAIL_PASSWORD
 ---
 apiVersion: v1

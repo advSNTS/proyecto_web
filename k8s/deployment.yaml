@@ -68,10 +68,7 @@ spec:
         - name: MAIL_USERNAME
           value: "luisylosbugs@gmail.com"
         - name: MAIL_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: back-end-santi
-              key: MAIL_PASSWORD
+          value: rhkv dvla slro zinv
 ---
 apiVersion: v1
 kind: Service

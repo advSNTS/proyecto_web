@@ -68,7 +68,7 @@ spec:
         - name: MAIL_USERNAME
           value: "luisylosbugs@gmail.com"
         - name: MAIL_PASSWORD
-          value: rhkvdvlaslrozinv
+          value: "rhkvdvlaslrozinv"
 ---
 apiVersion: v1
 kind: Service

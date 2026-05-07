@@ -59,7 +59,7 @@ spec:
           value: "https://grupo11.inphotech.co/front"
 
         # ===============================
-        # SMTP 
+        # SMTP
         # ===============================
         - name: MAIL_HOST
           value: "smtp.gmail.com"
@@ -68,7 +68,7 @@ spec:
         - name: MAIL_USERNAME
           value: "luisylosbugs@gmail.com"
         - name: MAIL_PASSWORD
-          value: "rhkvdvlaslrozinv"
+          value: "faakxwyzmppwjpf"
 ---
 apiVersion: v1
 kind: Service

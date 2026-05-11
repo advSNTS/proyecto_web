@@ -60,9 +60,13 @@ CREATE TABLE IF NOT EXISTS lanes (
     id BIGSERIAL PRIMARY KEY,
     pool_id BIGINT NOT NULL REFERENCES pools(id),
     nombre VARCHAR(150) NOT NULL,
-    rol_id BIGINT REFERENCES roles(id),
+    rol_id BIGINT NOT NULL REFERENCES roles(id),
     eliminado BOOLEAN NOT NULL DEFAULT false
 );
+
+CREATE INDEX IF NOT EXISTS idx_lanes_pool_rol_activo
+    ON lanes (pool_id, rol_id)
+    WHERE eliminado = false;
 
 ALTER TABLE actividades ADD CONSTRAINT fk_actividad_lane
     FOREIGN KEY (lane_id) REFERENCES lanes(id);

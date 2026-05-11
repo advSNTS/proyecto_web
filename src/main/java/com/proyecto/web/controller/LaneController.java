@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -39,11 +40,25 @@ public class LaneController {
         return ResponseEntity.ok(laneService.listarPorEmpresa(requerirNit(nitEmpresa)));
     }
 
+    @GetMapping("/admin")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
+    public ResponseEntity<List<LaneResponseDTO>> listarAdministrativo(@RequestParam(required = false) String nitEmpresa) {
+        return ResponseEntity.ok(laneService.listarTodasPorEmpresa(requerirNit(nitEmpresa)));
+    }
+
     @GetMapping("/pool/{poolId}")
     public ResponseEntity<List<LaneResponseDTO>> listarPorPool(
             @PathVariable Long poolId,
             @RequestParam(required = false) String nitEmpresa) {
         return ResponseEntity.ok(laneService.listarPorPool(requerirNit(nitEmpresa), poolId));
+    }
+
+    @GetMapping("/admin/pool/{poolId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
+    public ResponseEntity<List<LaneResponseDTO>> listarPorPoolAdministrativo(
+            @PathVariable Long poolId,
+            @RequestParam(required = false) String nitEmpresa) {
+        return ResponseEntity.ok(laneService.listarTodasPorPool(requerirNit(nitEmpresa), poolId));
     }
 
     @GetMapping("/{id}")

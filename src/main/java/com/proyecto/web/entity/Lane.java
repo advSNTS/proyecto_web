@@ -39,6 +39,7 @@ public class Lane {
     @JoinColumn(name = "rol_id")
     private Rol rolProceso;
 
+
     @Column(nullable = false)
     @Builder.Default
     private boolean eliminado = false;

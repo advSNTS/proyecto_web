@@ -17,6 +17,8 @@ public interface ProcesoRepository extends JpaRepository<Proceso, Long> {
 
     List<Proceso> findAllByEmpresa_NitAndEstadoNot(String nit, EstadoProceso estado);
 
+    List<Proceso> findAllByEmpresa_NitAndPool_IdAndEstadoNot(String nit, Long poolId, EstadoProceso estado);
+
     Optional<Proceso> findByIdAndEmpresa_NitAndEstadoNot(Long id, String nit, EstadoProceso estado);
 }
  

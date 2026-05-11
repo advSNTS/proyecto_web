@@ -91,7 +91,7 @@ class ProcesoServiceTest {
         procesoService.crearProceso(nuevo("P1", "C1"));
         procesoService.crearProceso(nuevo("P2", "C2"));
 
-        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(NIT);
+        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(NIT, null);
 
         assertNotNull(lista);
         assertFalse(lista.isEmpty());

@@ -13,4 +13,6 @@ public interface PoolRepository extends JpaRepository<Pool, Long> {
     List<Pool> findAllByEmpresa_NitAndEliminadoFalse(String nit);
 
     Optional<Pool> findByIdAndEmpresa_NitAndEliminadoFalse(Long id, String nit);
+
+    Optional<Pool> findByEmpresa_NitAndNombreAndEliminadoFalse(String nit, String nombre);
 }

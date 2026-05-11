@@ -1,0 +1,2 @@
+ALTER TABLE empleados
+    ADD COLUMN IF NOT EXISTS admin_global BOOLEAN NOT NULL DEFAULT false;

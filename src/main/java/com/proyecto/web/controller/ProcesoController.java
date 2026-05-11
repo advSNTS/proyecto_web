@@ -40,8 +40,9 @@ public class ProcesoController {
 
     @GetMapping
     public ResponseEntity<List<ProcesoResponseDTO>> obtenerTodos(
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(procesoService.obtenerProcesos(requerirNit(nitEmpresa)));
+            @RequestParam(required = false) String nitEmpresa,
+            @RequestParam(required = false) Long poolId) {
+        return ResponseEntity.ok(procesoService.obtenerProcesos(requerirNit(nitEmpresa), poolId));
     }
 
     @GetMapping("/{id}")

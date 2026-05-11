@@ -72,6 +72,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/rol-empleado/**").hasRole("ADMIN")
 
                         // ADMIN y EDITOR pueden crear/editar/eliminar procesos
+                        .requestMatchers(HttpMethod.POST, "/api/pools/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/procesos/**").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.PUT, "/api/procesos/**").hasAnyRole("ADMIN", "EDITOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/procesos/**").hasAnyRole("ADMIN", "EDITOR")

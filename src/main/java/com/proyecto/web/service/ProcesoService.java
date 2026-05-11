@@ -52,9 +52,18 @@ public class ProcesoService {
         return ProcesoMapper.toResponse(guardado);
     }
 
-    public List<ProcesoResponseDTO> obtenerProcesos(String nitEmpresa) {
+    public List<ProcesoResponseDTO> obtenerProcesos(String nitEmpresa, Long poolId) {
         if (nitEmpresa == null || nitEmpresa.isBlank()) {
             throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
+        }
+        if (poolId != null) {
+            poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
+                    .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+            return procesoRepository
+                    .findAllByEmpresa_NitAndPool_IdAndEstadoNot(nitEmpresa, poolId, EstadoProceso.INACTIVO)
+                    .stream()
+                    .map(ProcesoMapper::toResponse)
+                    .toList();
         }
         return procesoRepository
                 .findAllByEmpresa_NitAndEstadoNot(nitEmpresa, EstadoProceso.INACTIVO)

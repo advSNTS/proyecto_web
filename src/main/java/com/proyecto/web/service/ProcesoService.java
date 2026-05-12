@@ -3,6 +3,7 @@ package com.proyecto.web.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.HistorialProcesoResponseDTO;
+import com.proyecto.web.dto.HistorialProcesoResumenDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.entity.Empleado;
@@ -20,6 +21,7 @@ import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.repository.ProcesoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProcesoService {
 
+    private static final int LIMITE_HISTORIAL_POR_DEFECTO = 50;
+    private static final int LIMITE_HISTORIAL_MAXIMO = 200;
+
     private final ProcesoRepository procesoRepository;
     private final HistorialProcesoRepository historialProcesoRepository;
     private final EmpleadoRepository empleadoRepository;
@@ -39,49 +44,71 @@ public class ProcesoService {
     private final PoolRepository poolRepository;
     private final ObjectMapper objectMapper;
 
+    @Transactional
     public ProcesoResponseDTO crearProceso(ProcesoRequestDTO dto) {
         if (dto.getNitEmpresa() == null || dto.getNitEmpresa().isBlank()) {
             throw new BusinessException("nitEmpresa es obligatorio al crear un proceso", HttpStatus.BAD_REQUEST);
         }
+
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada", HttpStatus.NOT_FOUND));
+
         Pool pool = resolverPool(dto, empresa);
+
         Proceso proceso = ProcesoMapper.toEntity(dto, empresa, pool);
         Proceso guardado = procesoRepository.save(proceso);
+
         log.debug("Proceso creado id={} empresa={}", guardado.getId(), empresa.getNit());
+
         return ProcesoMapper.toResponse(guardado);
     }
 
+    @Transactional(readOnly = true)
     public List<ProcesoResponseDTO> obtenerProcesos(String nitEmpresa, Long poolId) {
         if (nitEmpresa == null || nitEmpresa.isBlank()) {
             throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
         }
+
         if (poolId != null) {
             poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
                     .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+
             return procesoRepository
-                    .findAllByEmpresa_NitAndPool_IdAndEstadoNot(nitEmpresa, poolId, EstadoProceso.INACTIVO)
+                    .findAllByEmpresa_NitAndPool_IdAndEstadoNotOrderByIdDesc(nitEmpresa, poolId, EstadoProceso.INACTIVO)
                     .stream()
                     .map(ProcesoMapper::toResponse)
                     .toList();
         }
+
         return procesoRepository
-                .findAllByEmpresa_NitAndEstadoNot(nitEmpresa, EstadoProceso.INACTIVO)
+                .findAllByEmpresa_NitAndEstadoNotOrderByIdDesc(nitEmpresa, EstadoProceso.INACTIVO)
                 .stream()
                 .map(ProcesoMapper::toResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public ProcesoResponseDTO obtenerProceso(Long id, String nitEmpresa) {
         return ProcesoMapper.toResponse(buscarVigente(id, nitEmpresa));
     }
 
+    /**
+     * Endpoint de soporte para pantallas de detalle: no consulta historial ni colecciones pesadas.
+     * Así el encabezado/detalle del proceso puede pintarse de inmediato y el historial se carga aparte.
+     */
+    @Transactional(readOnly = true)
+    public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id, String nitEmpresa) {
+        return obtenerProceso(id, nitEmpresa);
+    }
+
+    @Transactional(readOnly = true)
     public List<ProcesoResponseDTO> obtenerPorCategoria(String categoria, String nitEmpresa) {
         if (nitEmpresa == null || nitEmpresa.isBlank()) {
             throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
         }
+
         return procesoRepository
-                .findAllByCategoriaAndEstadoNot(categoria, EstadoProceso.INACTIVO)
+                .findAllByCategoriaAndEstadoNotOrderByIdDesc(categoria, EstadoProceso.INACTIVO)
                 .stream()
                 .filter(p -> p.getEmpresa().getNit().equals(nitEmpresa))
                 .map(ProcesoMapper::toResponse)
@@ -98,48 +125,99 @@ public class ProcesoService {
         proceso.setDescripcion(dto.getDescripcion());
         proceso.setCategoria(dto.getCategoria());
         proceso.setEstado(ProcesoMapper.resolveEstadoDesdeDto(dto));
+
         if (dto.getPoolId() != null) {
-            Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), proceso.getEmpresa().getNit())
+            Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(
+                            dto.getPoolId(),
+                            proceso.getEmpresa().getNit())
                     .orElseThrow(() -> new BusinessException("Pool no válido para la empresa", HttpStatus.BAD_REQUEST));
+
             proceso.setPool(pool);
         }
 
         Proceso guardado = procesoRepository.save(proceso);
+
         String valorNuevo = serializar(ProcesoMapper.toResponse(guardado));
+
         registrarHistorial(guardado, idEmpleado, valorAnterior, valorNuevo, "EDICION");
+
         return ProcesoMapper.toResponse(guardado);
     }
 
     @Transactional
     public void eliminarProceso(Long id, Long idEmpleado, String nitEmpresa) {
         Proceso proceso = buscarVigente(id, nitEmpresa);
+
         String valorAnterior = serializar(ProcesoMapper.toResponse(proceso));
+
         proceso.setEstado(EstadoProceso.INACTIVO);
+
         Proceso guardado = procesoRepository.save(proceso);
+
         registrarHistorial(guardado, idEmpleado, valorAnterior, null, "ELIMINACION");
+
         log.info("Proceso marcado INACTIVO id={}", id);
     }
 
+    @Transactional(readOnly = true)
     public List<HistorialProceso> obtenerHistorialDeProceso(Long idProceso) {
         return historialProcesoRepository.findAllByProceso_IdOrderByFechaCambioDesc(idProceso);
     }
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, String nitEmpresa) {
+        return obtenerHistorialProcesoParaEmpresa(idProceso, nitEmpresa, LIMITE_HISTORIAL_POR_DEFECTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(
+            Long idProceso,
+            String nitEmpresa,
+            Integer limite) {
         buscarVigente(idProceso, nitEmpresa);
-        return historialProcesoRepository.findDetallePorProcesoYEmpresa(idProceso, nitEmpresa);
+
+        int limiteSeguro = normalizarLimiteHistorial(limite);
+
+        return historialProcesoRepository.findDetallePorProcesoYEmpresa(
+                idProceso,
+                nitEmpresa,
+                PageRequest.of(0, limiteSeguro));
+    }
+
+    @Transactional(readOnly = true)
+    public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(
+            Long idProceso,
+            String nitEmpresa,
+            Integer limite) {
+        buscarVigente(idProceso, nitEmpresa);
+
+        int limiteSeguro = normalizarLimiteHistorial(limite);
+
+        long total = historialProcesoRepository.countByProceso_Id(idProceso);
+
+        return HistorialProcesoResumenDTO.builder()
+                .idProceso(idProceso)
+                .totalCambios(total)
+                .limiteAplicado(limiteSeguro)
+                .hayMas(total > limiteSeguro)
+                .build();
     }
 
     public Proceso buscarVigente(Long id, String nitEmpresa) {
         if (nitEmpresa == null || nitEmpresa.isBlank()) {
             throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
         }
+
         return procesoRepository
                 .findByIdAndEmpresa_NitAndEstadoNot(id, nitEmpresa, EstadoProceso.INACTIVO)
                 .orElseThrow(() -> new BusinessException("Proceso no encontrado", HttpStatus.NOT_FOUND));
     }
 
-    /** Uso restringido (p. ej. administrador global): proceso no inactivo sin filtrar empresa. */
+    /**
+     * Uso restringido, por ejemplo administrador global:
+     * proceso no inactivo sin filtrar empresa.
+     */
+    @Transactional(readOnly = true)
     public Proceso buscarVigenteGlobal(Long id) {
         return procesoRepository
                 .findByIdAndEstadoNot(id, EstadoProceso.INACTIVO)
@@ -151,6 +229,7 @@ public class ProcesoService {
             return poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), empresa.getNit())
                     .orElseThrow(() -> new BusinessException("Pool no válido para la empresa", HttpStatus.BAD_REQUEST));
         }
+
         return poolRepository
                 .findByEmpresa_NitAndEsDefaultTrueAndEliminadoFalse(empresa.getNit())
                 .orElseThrow(() -> new BusinessException(
@@ -158,13 +237,26 @@ public class ProcesoService {
                         HttpStatus.CONFLICT));
     }
 
-    private void registrarHistorial(Proceso proceso, Long idEmpleado,
-                                    String valorAnterior, String valorNuevo,
-                                    String tipoAccion) {
+    private int normalizarLimiteHistorial(Integer limite) {
+        if (limite == null || limite <= 0) {
+            return LIMITE_HISTORIAL_POR_DEFECTO;
+        }
+
+        return Math.min(limite, LIMITE_HISTORIAL_MAXIMO);
+    }
+
+    private void registrarHistorial(
+            Proceso proceso,
+            Long idEmpleado,
+            String valorAnterior,
+            String valorNuevo,
+            String tipoAccion) {
         Empleado empleado = null;
+
         if (idEmpleado != null) {
             empleado = empleadoRepository.findByIdAndDeletedFalse(idEmpleado).orElse(null);
         }
+
         HistorialProceso historial = HistorialProceso.builder()
                 .proceso(proceso)
                 .empleado(empleado)
@@ -173,6 +265,7 @@ public class ProcesoService {
                 .fechaCambio(LocalDateTime.now())
                 .tipoAccion(tipoAccion)
                 .build();
+
         historialProcesoRepository.save(historial);
     }
 

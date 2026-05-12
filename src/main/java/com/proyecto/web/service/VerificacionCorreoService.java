@@ -5,6 +5,7 @@ import com.proyecto.web.entity.Credencial;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.CredencialRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class VerificacionCorreoService {
@@ -28,23 +30,23 @@ public class VerificacionCorreoService {
     private String frontendBaseUrl;
 
     @Transactional
-public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) {
-    credencial.setVerificado(false);
-    credencial.setFechaVerificacion(null);
-    credencial.setTokenVerificacion(generarTokenSeguro());
-    credencialRepository.save(credencial);
+    public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) {
+        credencial.setVerificado(false);
+        credencial.setFechaVerificacion(null);
+        credencial.setTokenVerificacion(generarTokenSeguro());
 
-    String enlace = construirUrlVerificacion(credencial.getTokenVerificacion());
+        credencialRepository.save(credencial);
 
-    System.out.println("DEBUG VERIFICACION CORREO -> correo=" + credencial.getCorreo());
-    System.out.println("DEBUG VERIFICACION CORREO -> enlace=" + enlace);
+        String enlace = construirUrlVerificacion(credencial.getTokenVerificacion());
 
-    correoService.enviarCorreoVerificacion(
-            credencial.getCorreo(),
-            nombreDestinatario,
-            enlace
-    );
-}
+        log.info("Generado enlace de verificacion para {}", credencial.getCorreo());
+
+        correoService.enviarCorreoVerificacion(
+                credencial.getCorreo(),
+                nombreDestinatario,
+                enlace
+        );
+    }
 
     @Transactional
     public VerificacionCorreoResponseDTO verificarCorreo(String token) {
@@ -53,12 +55,15 @@ public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) 
         }
 
         Credencial credencial = credencialRepository.findByTokenVerificacion(token.trim())
-                .orElseThrow(() -> new BusinessException("Token de verificacion invalido o ya usado", HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new BusinessException(
+                        "Token de verificacion invalido o ya usado",
+                        HttpStatus.BAD_REQUEST));
 
         if (!credencial.isVerificado()) {
             credencial.setVerificado(true);
             credencial.setFechaVerificacion(LocalDateTime.now());
             credencial.setTokenVerificacion(null);
+
             credencialRepository.save(credencial);
         }
 
@@ -75,8 +80,10 @@ public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) 
             throw new BusinessException("Debe indicar el correo", HttpStatus.BAD_REQUEST);
         }
 
-        Credencial credencial = credencialRepository.findByCorreo(correo.trim())
-                .orElseThrow(() -> new BusinessException("No existe una cuenta con ese correo", HttpStatus.NOT_FOUND));
+        Credencial credencial = credencialRepository.findByCorreoIgnoreCase(correo.trim())
+                .orElseThrow(() -> new BusinessException(
+                        "No existe una cuenta con ese correo",
+                        HttpStatus.NOT_FOUND));
 
         if (credencial.isVerificado()) {
             return VerificacionCorreoResponseDTO.builder()
@@ -86,7 +93,9 @@ public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) 
                     .build();
         }
 
-        String nombre = credencial.getEmpleado() != null ? credencial.getEmpleado().getNombre() : null;
+        String nombre = credencial.getEmpleado() != null
+                ? credencial.getEmpleado().getNombre()
+                : null;
 
         crearTokenYEnviar(credencial, nombre);
 
@@ -100,7 +109,10 @@ public void crearTokenYEnviar(Credencial credencial, String nombreDestinatario) 
     private String generarTokenSeguro() {
         byte[] bytes = new byte[48];
         secureRandom.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(bytes);
     }
 
     private String construirUrlVerificacion(String token) {

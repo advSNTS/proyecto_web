@@ -1,6 +1,7 @@
 package com.proyecto.web.controller;
 
 import com.proyecto.web.dto.HistorialProcesoResponseDTO;
+import com.proyecto.web.dto.HistorialProcesoResumenDTO;
 import com.proyecto.web.dto.ProcesoCompartidoRequestDTO;
 import com.proyecto.web.dto.ProcesoCompartidoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
@@ -52,6 +53,13 @@ public class ProcesoController {
         return ResponseEntity.ok(procesoService.obtenerProceso(id, requerirNit(nitEmpresa)));
     }
 
+    @GetMapping("/{id}/detalle")
+    public ResponseEntity<ProcesoResponseDTO> obtenerDetalleRapido(
+            @PathVariable Long id,
+            @RequestParam(required = false) String nitEmpresa) {
+        return ResponseEntity.ok(procesoService.obtenerDetalleProcesoRapido(id, requerirNit(nitEmpresa)));
+    }
+
     @GetMapping("/categoria/{categoria}")
     public ResponseEntity<List<ProcesoResponseDTO>> obtenerPorCategoria(
             @PathVariable String categoria,
@@ -81,9 +89,19 @@ public class ProcesoController {
     @GetMapping("/{id}/historial")
     public ResponseEntity<List<HistorialProcesoResponseDTO>> historial(
             @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa) {
+            @RequestParam(required = false) String nitEmpresa,
+            @RequestParam(required = false) Integer limite) {
         return ResponseEntity.ok(
-                procesoService.obtenerHistorialProcesoParaEmpresa(id, requerirNit(nitEmpresa)));
+                procesoService.obtenerHistorialProcesoParaEmpresa(id, requerirNit(nitEmpresa), limite));
+    }
+
+    @GetMapping("/{id}/historial/resumen")
+    public ResponseEntity<HistorialProcesoResumenDTO> resumenHistorial(
+            @PathVariable Long id,
+            @RequestParam(required = false) String nitEmpresa,
+            @RequestParam(required = false) Integer limite) {
+        return ResponseEntity.ok(
+                procesoService.obtenerResumenHistorialProceso(id, requerirNit(nitEmpresa), limite));
     }
 
     @PostMapping("/{id}/compartir")
@@ -106,11 +124,13 @@ public class ProcesoController {
 
     private String requerirNit(String nitEmpresa) {
         String nit = SecurityUtils.resolverNitEmpresa(nitEmpresa);
+
         if (nit == null || nit.isBlank()) {
             throw new BusinessException(
                     "nitEmpresa es obligatorio (query param o token JWT)",
                     HttpStatus.BAD_REQUEST);
         }
+
         return nit;
     }
 }

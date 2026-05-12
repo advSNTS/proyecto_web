@@ -1,9 +1,11 @@
 package com.proyecto.web.service;
 
+import com.proyecto.web.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -19,26 +21,45 @@ public class CorreoService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
+    @Value("${app.mail.fail-on-error:false}")
+    private boolean failOnError;
+
     @Value("${app.mail.from:no-reply@grupo11.inphotech.co}")
     private String remitente;
 
     public void enviarCorreoVerificacion(String destinatario, String nombre, String enlaceVerificacion) {
-       log.info("ENTRANDO A CorreoService.enviarCorreoVerificacion destinatario={} mailEnabled={} remitente={}",
-        destinatario,
-        mailEnabled,
-        remitente);
-       
-       
-       
+        log.info(
+                "Intentando enviar correo de verificacion destinatario={} mailEnabled={} remitente={}",
+                destinatario,
+                mailEnabled,
+                remitente
+        );
+
         if (!mailEnabled) {
-            log.info("Correo desactivado. Enlace de verificacion para {}: {}", destinatario, enlaceVerificacion);
+            log.info(
+                    "Correo desactivado. Enlace de verificacion para {}: {}",
+                    destinatario,
+                    enlaceVerificacion
+            );
             return;
         }
 
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
 
         if (mailSender == null) {
-            log.warn("No hay JavaMailSender configurado. Enlace de verificacion para {}: {}", destinatario, enlaceVerificacion);
+            String mensaje = "No hay JavaMailSender configurado para enviar correos";
+
+            log.warn(
+                    "{}. Enlace de verificacion para {}: {}",
+                    mensaje,
+                    destinatario,
+                    enlaceVerificacion
+            );
+
+            if (failOnError) {
+                throw new BusinessException(mensaje, HttpStatus.SERVICE_UNAVAILABLE);
+            }
+
             return;
         }
 
@@ -50,14 +71,29 @@ public class CorreoService {
 
         try {
             mailSender.send(mensaje);
+
             log.info("Correo de verificacion enviado a {}", destinatario);
         } catch (MailException ex) {
-            log.error("No se pudo enviar el correo de verificacion a {}. Enlace: {}", destinatario, enlaceVerificacion, ex);
+            log.error(
+                    "No se pudo enviar el correo de verificacion a {}. Enlace: {}",
+                    destinatario,
+                    enlaceVerificacion,
+                    ex
+            );
+
+            if (failOnError) {
+                throw new BusinessException(
+                        "No se pudo enviar el correo de verificacion",
+                        HttpStatus.SERVICE_UNAVAILABLE
+                );
+            }
         }
     }
 
     private String construirCuerpo(String nombre, String enlaceVerificacion) {
-        String saludo = (nombre == null || nombre.isBlank()) ? "Hola" : "Hola " + nombre.trim();
+        String saludo = (nombre == null || nombre.isBlank())
+                ? "Hola"
+                : "Hola " + nombre.trim();
 
         return saludo + ",\n\n"
                 + "Gracias por registrarte en el sistema. Para activar tu cuenta, confirma tu correo entrando al siguiente enlace:\n\n"

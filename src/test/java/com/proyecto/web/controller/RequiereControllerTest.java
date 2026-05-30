@@ -163,7 +163,7 @@ class RequiereControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.nombreActividad").exists())
                 .andExpect(jsonPath("$.actividadId").value(actividad.getId()))
                 .andExpect(jsonPath("$.rolId").value(rol.getId()));
     }
@@ -200,7 +200,7 @@ class RequiereControllerTest {
         mockMvc.perform(post("/api/requiere")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -214,7 +214,7 @@ class RequiereControllerTest {
         mockMvc.perform(post("/api/requiere")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -327,6 +327,6 @@ class RequiereControllerTest {
         mockMvc.perform(delete("/api/requiere/actividad/{actividadId}/rol/{rolId}",
                 actividad.getId(), rol.getId())
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 }

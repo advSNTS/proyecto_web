@@ -4,7 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.VerificacionCorreoRequestDTO;
 import com.proyecto.web.dto.VerificacionCorreoResponseDTO;
 import com.proyecto.web.entity.Credencial;
+import com.proyecto.web.entity.Empleado;
+import com.proyecto.web.entity.Empresa;
+import com.proyecto.web.entity.TipoDocumento;
 import com.proyecto.web.repository.CredencialRepository;
+import com.proyecto.web.repository.EmpleadoRepository;
+import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.service.VerificacionCorreoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +39,12 @@ class VerificacionCorreoControllerTest {
     private ObjectMapper objectMapper;
     
     @Autowired
+    private EmpresaRepository empresaRepository;
+    
+    @Autowired
+    private EmpleadoRepository empleadoRepository;
+    
+    @Autowired
     private CredencialRepository credencialRepository;
     
     private MockMvc mockMvc;
@@ -47,8 +58,25 @@ class VerificacionCorreoControllerTest {
     }
 
     private void setupTestData() {
-        // Crear credencial sin verificar
+        // 1. Crear y guardar Empresa
+        Empresa empresa = new Empresa();
+        empresa.setNit("987654321");
+        empresa.setNombre("Empresa Test");
+        empresa.setDeleted(false);
+        empresaRepository.save(empresa);
+
+        // 2. Crear y guardar Empleado con referencia a Empresa
+        Empleado empleado = new Empleado();
+        empleado.setEmpresa(empresa);
+        empleado.setNombre("Empleado Test");
+        empleado.setTipoDocumento(TipoDocumento.CC);
+        empleado.setNumeroDocumento("123456789");
+        empleado.setDeleted(false);
+        empleado = empleadoRepository.save(empleado);
+
+        // 3. Crear Credencial y asociar al Empleado guardado
         credencial = new Credencial();
+        credencial.setEmpleado(empleado);
         credencial.setCorreo("test@example.com");
         credencial.setContrasena("password123");
         credencial.setVerificado(false);

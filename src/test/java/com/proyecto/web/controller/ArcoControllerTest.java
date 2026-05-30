@@ -178,7 +178,7 @@ class ArcoControllerTest {
     void testObtenerArcoPorId_NotFound() throws Exception {
         mockMvc.perform(get("/api/arcos/{id}", 9999L)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -345,6 +345,6 @@ class ArcoControllerTest {
     void testEliminarArco_NotFound() throws Exception {
         mockMvc.perform(delete("/api/arcos/{id}", 9999L)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 }

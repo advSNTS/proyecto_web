@@ -115,7 +115,7 @@ class MensajeCatchControllerTest {
                 .param("nitEmpresa", nitEmpresa)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test

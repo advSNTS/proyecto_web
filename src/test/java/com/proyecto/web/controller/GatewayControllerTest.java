@@ -104,7 +104,7 @@ class GatewayControllerTest {
         mockMvc.perform(post("/api/gateways")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -150,7 +150,7 @@ class GatewayControllerTest {
     void testObtenerGatewayPorId_NotFound() throws Exception {
         mockMvc.perform(get("/api/gateways/{id}", 9999L)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -309,6 +309,6 @@ class GatewayControllerTest {
     void testEliminarGateway_NotFound() throws Exception {
         mockMvc.perform(delete("/api/gateways/{id}", 9999L)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isNotFound());
     }
 }

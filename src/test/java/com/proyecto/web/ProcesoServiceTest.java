@@ -1,6 +1,7 @@
 package com.proyecto.web;
 
 import com.proyecto.web.dto.EmpresaRequestDTO;
+import com.proyecto.web.dto.HistorialProcesoResumenDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.exception.BusinessException;
@@ -159,5 +160,72 @@ class ProcesoServiceTest {
 
         Long id = creado.getId();
         assertThrows(BusinessException.class, () -> procesoService.obtenerProceso(id, NIT));
+    }
+
+    @Test
+    void obtenerDetalleProcesoRapido_deberiaRetornarMismoProceso() {
+        ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Rapido", "Cat-R"));
+
+        ProcesoResponseDTO rapido = procesoService.obtenerDetalleProcesoRapido(creado.getId(), NIT);
+
+        assertEquals(creado.getId(), rapido.getId());
+        assertEquals("Proceso Rapido", rapido.getNombre());
+    }
+
+    @Test
+    void buscarVigente_sinNitEmpresa_deberiaLanzarBadRequest() {
+        ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Nit", "Cat-N"));
+
+        BusinessException ex = assertThrows(
+                BusinessException.class,
+                () -> procesoService.buscarVigente(creado.getId(), " "));
+        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
+
+    @Test
+    void obtenerHistorialProcesoParaEmpresa_deberiaRegistrarCambios() {
+        ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Historial API", "Cat-H"));
+
+        procesoService.actualizarProceso(
+                creado.getId(),
+                nuevo("Proceso Historial Modificado", "Cat-H"),
+                null,
+                NIT);
+
+        var historial = procesoService.obtenerHistorialProcesoParaEmpresa(creado.getId(), NIT, 10);
+
+        assertFalse(historial.isEmpty());
+    }
+
+    @Test
+    void obtenerResumenHistorialProceso_deberiaIndicarTotal() {
+        ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Resumen", "Cat-S"));
+
+        procesoService.actualizarProceso(
+                creado.getId(),
+                nuevo("Proceso Resumen Actualizado", "Cat-S"),
+                null,
+                NIT);
+
+        HistorialProcesoResumenDTO resumen =
+                procesoService.obtenerResumenHistorialProceso(creado.getId(), NIT, 5);
+
+        assertEquals(creado.getId(), resumen.getIdProceso());
+        assertTrue(resumen.getTotalCambios() >= 1);
+    }
+
+    @Test
+    void crearProceso_empresaInexistente_deberiaLanzarNotFound() {
+        ProcesoRequestDTO dto = ProcesoRequestDTO.builder()
+                .nitEmpresa("NIT-INEXISTENTE")
+                .nombre("Proceso Fallido")
+                .descripcion("D")
+                .categoria("C")
+                .borrador(false)
+                .activo(true)
+                .build();
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> procesoService.crearProceso(dto));
+        assertEquals(org.springframework.http.HttpStatus.NOT_FOUND, ex.getStatus());
     }
 }

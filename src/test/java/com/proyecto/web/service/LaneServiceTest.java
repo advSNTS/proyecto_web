@@ -1,4 +1,4 @@
-package com.proyecto.web;
+package com.proyecto.web.service;
 
 import com.proyecto.web.dto.LaneRequestDTO;
 import com.proyecto.web.dto.LaneResponseDTO;

@@ -6,7 +6,7 @@ import com.proyecto.web.dto.VerificacionCorreoResponseDTO;
 import com.proyecto.web.entity.Credencial;
 import com.proyecto.web.entity.Empleado;
 import com.proyecto.web.entity.Empresa;
-import com.proyecto.web.entity.TipoDocumento;
+import com.proyecto.web.enums.TipoDocumento;
 import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.repository.EmpleadoRepository;
 import com.proyecto.web.repository.EmpresaRepository;

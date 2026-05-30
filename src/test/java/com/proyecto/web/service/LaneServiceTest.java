@@ -113,7 +113,6 @@ class LaneServiceTest {
         autenticar(principal(100L, "NIT-001", false));
 
         Empresa empresa = Empresa.builder().nit("NIT-001").build();
-        Pool pool = Pool.builder().id(10L).empresa(empresa).build();
         Rol rolPermitido = Rol.builder().id(7L).empresa(empresa).build();
 
         RolXEmpleado asignacion = RolXEmpleado.builder()

@@ -208,18 +208,21 @@ class EmpleadoServiceTest {
     @Test
     @DisplayName("login rechaza credenciales vacías")
     void login_credencialesVacias() {
-        assertThrows(AuthenticationException.class, () -> empleadoService.login(
-                EmpleadoLoginRequestDTO.builder().correo(" ").contrasena("").build()));
+        EmpleadoLoginRequestDTO request = EmpleadoLoginRequestDTO.builder()
+                .correo(" ")
+                .contrasena("")
+                .build();
+        assertThrows(AuthenticationException.class, () -> empleadoService.login(request));
     }
 
     @Test
     @DisplayName("login rechaza correo inexistente")
     void login_correoInexistente() {
-        assertThrows(AuthenticationException.class, () -> empleadoService.login(
-                EmpleadoLoginRequestDTO.builder()
-                        .correo("noexiste@test.com")
-                        .contrasena("password123")
-                        .build()));
+        EmpleadoLoginRequestDTO request = EmpleadoLoginRequestDTO.builder()
+                .correo("noexiste@test.com")
+                .contrasena("password123")
+                .build();
+        assertThrows(AuthenticationException.class, () -> empleadoService.login(request));
     }
 
     @Test
@@ -237,11 +240,11 @@ class EmpleadoServiceTest {
                 .build());
 
         assertNotNull(creado.getId());
-        assertThrows(AuthenticationException.class, () -> empleadoService.login(
-                EmpleadoLoginRequestDTO.builder()
-                        .correo("noverif@test.com")
-                        .contrasena("password123")
-                        .build()));
+        EmpleadoLoginRequestDTO request = EmpleadoLoginRequestDTO.builder()
+                .correo("noverif@test.com")
+                .contrasena("password123")
+                .build();
+        assertThrows(AuthenticationException.class, () -> empleadoService.login(request));
     }
 
     @Test

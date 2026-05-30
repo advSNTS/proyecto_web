@@ -182,10 +182,11 @@ class ProcesoServiceTest {
     void buscarVigente_sinNitEmpresa_deberiaLanzarBadRequest() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Nit", "Cat-N"));
 
+        Long procesoId = creado.getId();
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> procesoService.buscarVigente(creado.getId(), " "));
-        assertEquals(org.springframework.http.HttpStatus.BAD_REQUEST, ex.getStatus());
+                () -> procesoService.buscarVigente(procesoId, " "));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 
     @Test

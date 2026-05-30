@@ -81,36 +81,24 @@ class ProcesoSeleniumTest extends BaseSeleniumTest {
         WebElement poolSelectElement = driver.findElement(By.cssSelector("[data-testid='proceso-pool']"));
         seleccionarPorIndice(poolSelectElement, 1, js);
 
-        // --- CONTROL DE SINCRONIZACIÓN ---
-        // 1. Esperamos a que el atributo del select en el DOM cambie y deje de ser null
         wait.until(d -> {
             String val = poolSelectElement.getAttribute("value");
             return val != null && !val.isEmpty() && !val.contains("null");
         });
 
-        // 2. Un breve respiro de 500ms para garantizar que el thread de Angular termine 
-        // de procesar el onPoolChange() y actualice los estados internos
-        try { Thread.sleep(500); } catch (Exception e) {}
-
-
-        // 2. CREAR ACTIVIDADES
         WebElement btnAgregarActividad = wait.until(
             ExpectedConditions.elementToBeClickable(By.cssSelector("button[data-testid='agregar-actividad']"))
         );
 
-        // Forzamos el scroll al centro de la pantalla para evitar que elementos fijos (como el header) intercepten el clic
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", btnAgregarActividad);
         btnAgregarActividad = wait.until(
             ExpectedConditions.elementToBeClickable(By.cssSelector("button[data-testid='agregar-actividad']"))
         );
 
-        // --- Actividad 1 (índice 0) ---
         agregarActividad(btnAgregarActividad, js, 1);
         
-        // Esperamos el campo propio de actividad, no cualquier .flow-card del editor.
         WebElement primeraCard = esperarCardActividad(wait, 0);
 
-        // Buscamos los inputs acotados a la primera tarjeta encontrada
         WebElement actNombre0 = primeraCard.findElement(By.cssSelector("[data-testid='actividad-nombre-0']"));
         escribirCampo(actNombre0, "Primera Actividad", js);
         
@@ -122,8 +110,6 @@ class ProcesoSeleniumTest extends BaseSeleniumTest {
         
         seleccionarPorIndice(primeraCard.findElement(By.cssSelector("[data-testid='actividad-lane-0']")), 1, js);
 
-
-        // --- Actividad 2 (índice 1) ---
         btnAgregarActividad = wait.until(
             ExpectedConditions.elementToBeClickable(By.cssSelector("button[data-testid='agregar-actividad']"))
         );
@@ -142,12 +128,9 @@ class ProcesoSeleniumTest extends BaseSeleniumTest {
         
         seleccionarPorIndice(segundaCard.findElement(By.cssSelector("[data-testid='actividad-lane-1']")), 1, js);
 
-
-        // 3. GUARDAR
         WebElement btnSubmit = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[type='submit']")));
         js.executeScript("arguments[0].click();", btnSubmit);
 
-        // Verificar redirección al detalle
         esperarRedireccionDetalle(wait);
         assertTrue(driver.getCurrentUrl().contains("/detalle"));
     }

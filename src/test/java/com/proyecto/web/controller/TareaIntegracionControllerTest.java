@@ -2,7 +2,6 @@ package com.proyecto.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.TareaIntegracionRequestDTO;
-import com.proyecto.web.dto.TareaIntegracionResponseDTO;
 import com.proyecto.web.entity.MensajeExterno;
 import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.entity.TareaIntegracion;
@@ -12,7 +11,6 @@ import com.proyecto.web.repository.ProcesoRepository;
 import com.proyecto.web.repository.TareaIntegracionRepository;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.ProcesoService;
-import com.proyecto.web.service.TareaIntegracionService;
 import com.proyecto.web.support.IntegrationTestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

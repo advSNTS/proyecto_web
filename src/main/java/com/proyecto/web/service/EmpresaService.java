@@ -136,7 +136,7 @@ public class EmpresaService {
     @Transactional(readOnly = true)
     public EmpresaResponseDTO obtenerEmpresa(String nit) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nit)
-                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
+                .orElseThrow(() -> new BusinessException(EMPRESA_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
 
         return EmpresaMapper.toResponse(empresa);
     }
@@ -144,7 +144,7 @@ public class EmpresaService {
     @Transactional
     public EmpresaResponseDTO actualizarEmpresa(String nit, EmpresaRequestDTO dto) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nit)
-                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
+                .orElseThrow(() -> new BusinessException(EMPRESA_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
 
         empresa.setNombre(dto.getNombre());
 
@@ -158,7 +158,7 @@ public class EmpresaService {
     @Transactional
     public void eliminarEmpresa(String nit) {
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nit)
-                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
+                .orElseThrow(() -> new BusinessException(EMPRESA_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
 
         empresa.setDeleted(true);
 

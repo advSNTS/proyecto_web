@@ -29,6 +29,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_EDITOR = "EDITOR";
+    private static final String API_EMPLEADOS_PATH = "/api/empleados/**";
+    private static final String API_PROCESOS_PATH = "/api/procesos/**";
+    private static final String API_PATH = "/api/**";
+
     @Value("${app.security.enabled:true}")
     private boolean securityEnabled;
 
@@ -69,24 +75,24 @@ public class SecurityConfig {
                             .requestMatchers("/error").permitAll()
 
                             // Solo ADMIN puede gestionar empleados y asignar roles
-                            .requestMatchers(HttpMethod.POST, "/api/empleados").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.GET, "/api/empleados/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.PUT, "/api/empleados/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.DELETE, "/api/empleados/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.POST, "/api/rol-empleado").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.DELETE, "/api/rol-empleado/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/empleados").hasRole(ROLE_ADMIN)
+                            .requestMatchers(HttpMethod.GET, API_EMPLEADOS_PATH).hasRole(ROLE_ADMIN)
+                            .requestMatchers(HttpMethod.PUT, API_EMPLEADOS_PATH).hasRole(ROLE_ADMIN)
+                            .requestMatchers(HttpMethod.DELETE, API_EMPLEADOS_PATH).hasRole(ROLE_ADMIN)
+                            .requestMatchers(HttpMethod.POST, "/api/rol-empleado").hasRole(ROLE_ADMIN)
+                            .requestMatchers(HttpMethod.DELETE, "/api/rol-empleado/**").hasRole(ROLE_ADMIN)
 
                             // ADMIN y EDITOR pueden crear/editar/eliminar procesos
-                            .requestMatchers(HttpMethod.POST, "/api/pools/**").hasRole("ADMIN")
-                            .requestMatchers(HttpMethod.POST, "/api/procesos/**").hasAnyRole("ADMIN", "EDITOR")
-                            .requestMatchers(HttpMethod.PUT, "/api/procesos/**").hasAnyRole("ADMIN", "EDITOR")
-                            .requestMatchers(HttpMethod.DELETE, "/api/procesos/**").hasAnyRole("ADMIN", "EDITOR")
-                            .requestMatchers(HttpMethod.POST, "/api/**").hasAnyRole("ADMIN", "EDITOR")
-                            .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("ADMIN", "EDITOR")
-                            .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.POST, "/api/pools/**").hasRole(ROLE_ADMIN)
+                            .requestMatchers(HttpMethod.POST, API_PROCESOS_PATH).hasAnyRole(ROLE_ADMIN, ROLE_EDITOR)
+                            .requestMatchers(HttpMethod.PUT, API_PROCESOS_PATH).hasAnyRole(ROLE_ADMIN, ROLE_EDITOR)
+                            .requestMatchers(HttpMethod.DELETE, API_PROCESOS_PATH).hasAnyRole(ROLE_ADMIN, ROLE_EDITOR)
+                            .requestMatchers(HttpMethod.POST, API_PATH).hasAnyRole(ROLE_ADMIN, ROLE_EDITOR)
+                            .requestMatchers(HttpMethod.PUT, API_PATH).hasAnyRole(ROLE_ADMIN, ROLE_EDITOR)
+                            .requestMatchers(HttpMethod.DELETE, API_PATH).hasRole(ROLE_ADMIN)
 
                             // Cualquier autenticado puede leer
-                            .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
+                            .requestMatchers(HttpMethod.GET, API_PATH).authenticated()
                             .anyRequest().authenticated())
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         } else {

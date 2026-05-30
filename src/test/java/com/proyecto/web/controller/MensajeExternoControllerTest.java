@@ -2,11 +2,9 @@ package com.proyecto.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.MensajeExternoRequestDTO;
-import com.proyecto.web.dto.MensajeExternoResponseDTO;
 import com.proyecto.web.entity.MensajeExterno;
 import com.proyecto.web.enums.TipoDestinoMensajeExterno;
 import com.proyecto.web.repository.MensajeExternoRepository;
-import com.proyecto.web.service.MensajeExternoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

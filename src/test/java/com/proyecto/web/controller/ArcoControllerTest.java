@@ -2,7 +2,6 @@ package com.proyecto.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.ArcoRequestDTO;
-import com.proyecto.web.dto.ArcoResponseDTO;
 import com.proyecto.web.entity.Arco;
 import com.proyecto.web.entity.Nodo;
 import com.proyecto.web.entity.Proceso;
@@ -10,7 +9,6 @@ import com.proyecto.web.enums.TipoNodo;
 import com.proyecto.web.repository.ArcoRepository;
 import com.proyecto.web.repository.NodoRepository;
 import com.proyecto.web.repository.ProcesoRepository;
-import com.proyecto.web.service.ArcoService;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.support.IntegrationTestData;
@@ -55,9 +53,6 @@ class ArcoControllerTest {
     
     @Autowired
     private ArcoRepository arcoRepository;
-    
-    @Autowired
-    private ArcoService arcoService;
     
     private MockMvc mockMvc;
     private Proceso proceso;

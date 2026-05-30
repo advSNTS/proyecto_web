@@ -2,12 +2,22 @@ package com.proyecto.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.EmpresaRequestDTO;
+import com.proyecto.web.dto.PoolRequestDTO;
+import com.proyecto.web.dto.ProcesoCompartidoRequestDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
+import com.proyecto.web.enums.PermisoProcesoCompartido;
+import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.service.EmpresaService;
+import com.proyecto.web.service.PoolService;
 import com.proyecto.web.service.ProcesoService;
+import com.proyecto.web.security.UsuarioPrincipal;
+import com.proyecto.web.service.VerificacionCorreoService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -47,7 +57,17 @@ class ProcesoControllerTest {
     @Autowired
     private EmpresaService empresaService;
 
+    @Autowired
+    private PoolService poolService;
+
+    @Autowired
+    private CredencialRepository credencialRepository;
+
+    @Autowired
+    private VerificacionCorreoService verificacionCorreoService;
+
     private Long procesoId;
+    private Long poolDestinoId;
 
     @BeforeEach
     void setUp() {
@@ -69,6 +89,28 @@ class ProcesoControllerTest {
 
         ProcesoResponseDTO proceso = procesoService.crearProceso(procesoDTO);
         this.procesoId = proceso.getId();
+
+        var credencial = credencialRepository.findByCorreo("ec@test.com").orElseThrow();
+        verificacionCorreoService.verificarCorreo(credencial.getTokenVerificacion());
+
+        poolDestinoId = poolService.crear(NIT, PoolRequestDTO.builder()
+                .nombre("Pool Colaboracion Ctrl")
+                .descripcion("Pool para compartir en tests")
+                .build()).getId();
+
+    }
+
+    @AfterEach
+    void limpiarSeguridad() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void autenticarAdmin() {
+        var credencial = credencialRepository.findByCorreo("ec@test.com").orElseThrow();
+        Long adminId = credencial.getEmpleado().getId();
+        UsuarioPrincipal principal = new UsuarioPrincipal(adminId, NIT, false, java.util.List.of());
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, "token", principal.getAuthorities()));
     }
 
     @Test
@@ -170,5 +212,67 @@ class ProcesoControllerTest {
                 .param("nitEmpresa", NIT)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void obtenerDetalleRapido_retorna200() throws Exception {
+        mockMvc.perform(get("/api/procesos/" + procesoId + "/detalle")
+                .param("nitEmpresa", NIT)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(procesoId.intValue()))
+                .andExpect(jsonPath("$.nombre").value("Proceso Test Controlador"));
+    }
+
+    @Test
+    void obtenerResumenHistorial_retorna200() throws Exception {
+        mockMvc.perform(get("/api/procesos/" + procesoId + "/historial/resumen")
+                .param("nitEmpresa", NIT)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.idProceso").value(procesoId.intValue()));
+    }
+
+    @Test
+    void compartirProceso_retorna200() throws Exception {
+        autenticarAdmin();
+        ProcesoCompartidoRequestDTO dto = ProcesoCompartidoRequestDTO.builder()
+                .poolId(poolDestinoId)
+                .permiso(PermisoProcesoCompartido.LECTURA)
+                .build();
+
+        mockMvc.perform(post("/api/procesos/" + procesoId + "/compartir")
+                .param("nitEmpresa", NIT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.poolId").value(poolDestinoId.intValue()));
+    }
+
+    @Test
+    void listarCompartidos_retorna200() throws Exception {
+        autenticarAdmin();
+        ProcesoCompartidoRequestDTO dto = ProcesoCompartidoRequestDTO.builder()
+                .poolId(poolDestinoId)
+                .permiso(PermisoProcesoCompartido.LECTURA)
+                .build();
+
+        mockMvc.perform(post("/api/procesos/" + procesoId + "/compartir")
+                .param("nitEmpresa", NIT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)));
+
+        mockMvc.perform(get("/api/procesos/" + procesoId + "/compartidos")
+                .param("nitEmpresa", NIT)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
+    }
+
+    @Test
+    void obtenerProceso_sinNitEmpresa_retorna400() throws Exception {
+        mockMvc.perform(get("/api/procesos/" + procesoId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }

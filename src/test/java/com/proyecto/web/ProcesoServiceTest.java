@@ -2,11 +2,14 @@ package com.proyecto.web;
 
 import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.HistorialProcesoResumenDTO;
+import com.proyecto.web.dto.PoolRequestDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.service.EmpresaService;
+import com.proyecto.web.service.PoolService;
 import com.proyecto.web.service.ProcesoService;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,9 @@ class ProcesoServiceTest {
 
     @Autowired
     private EmpresaService empresaService;
+
+    @Autowired
+    private PoolService poolService;
 
     @BeforeEach
     void crearEmpresa() {
@@ -226,6 +232,94 @@ class ProcesoServiceTest {
                 .build();
 
         BusinessException ex = assertThrows(BusinessException.class, () -> procesoService.crearProceso(dto));
-        assertEquals(org.springframework.http.HttpStatus.NOT_FOUND, ex.getStatus());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+    }
+
+    @Test
+    void crearProceso_sinNitEmpresa_deberiaLanzarBadRequest() {
+        ProcesoRequestDTO dto = ProcesoRequestDTO.builder()
+                .nombre("Sin Nit")
+                .descripcion("D")
+                .categoria("C")
+                .build();
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> procesoService.crearProceso(dto));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
+
+    @Test
+    void obtenerProcesos_conPoolIdValido_deberiaFiltrarPorPool() {
+        ProcesoResponseDTO enPool = procesoService.crearProceso(nuevo("Proceso Pool A", "Cat-P"));
+        Long poolId = enPool.getPoolId();
+
+        procesoService.crearProceso(ProcesoRequestDTO.builder()
+                .nitEmpresa(NIT)
+                .nombre("Proceso Pool B")
+                .descripcion("D")
+                .categoria("Cat-P")
+                .poolId(poolService.crear(NIT, PoolRequestDTO.builder()
+                        .nombre("Pool Alterno")
+                        .build()).getId())
+                .borrador(false)
+                .activo(true)
+                .build());
+
+        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(NIT, poolId);
+
+        assertTrue(lista.stream().anyMatch(p -> p.getNombre().equals("Proceso Pool A")));
+        assertTrue(lista.stream().allMatch(p -> poolId.equals(p.getPoolId())));
+    }
+
+    @Test
+    void obtenerPorCategoria_sinNitEmpresa_deberiaLanzarBadRequest() {
+        BusinessException ex = assertThrows(
+                BusinessException.class,
+                () -> procesoService.obtenerPorCategoria("Categoria", null));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+    }
+
+    @Test
+    void actualizarProceso_conPoolId_deberiaCambiarPool() {
+        ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Pool Orig", "Cat-U"));
+        Long nuevoPoolId = poolService.crear(NIT, PoolRequestDTO.builder()
+                .nombre("Pool Destino Update")
+                .build()).getId();
+
+        ProcesoRequestDTO update = ProcesoRequestDTO.builder()
+                .nitEmpresa(NIT)
+                .nombre("Proceso Pool Orig")
+                .descripcion("D")
+                .categoria("Cat-U")
+                .poolId(nuevoPoolId)
+                .borrador(false)
+                .activo(true)
+                .build();
+
+        ProcesoResponseDTO actualizado =
+                procesoService.actualizarProceso(creado.getId(), update, null, NIT);
+
+        assertEquals(nuevoPoolId, actualizado.getPoolId());
+    }
+
+    @Test
+    void obtenerHistorialDeProceso_deberiaRetornarRegistros() {
+        ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Hist De Proceso", "Cat-HP"));
+        procesoService.actualizarProceso(
+                creado.getId(),
+                nuevo("Proceso Hist De Proceso Mod", "Cat-HP"),
+                null,
+                NIT);
+
+        var historial = procesoService.obtenerHistorialDeProceso(creado.getId());
+
+        assertFalse(historial.isEmpty());
+    }
+
+    @Test
+    void buscarVigenteGlobal_inexistente_deberiaLanzarNotFound() {
+        BusinessException ex = assertThrows(
+                BusinessException.class,
+                () -> procesoService.buscarVigenteGlobal(999_999L));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
     }
 }

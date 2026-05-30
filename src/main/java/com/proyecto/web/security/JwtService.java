@@ -7,6 +7,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -14,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -33,7 +34,7 @@ public class JwtService {
                                Collection<TipoRolSistema> rolesSistema) {
         List<String> authorities = rolesSistema.stream()
                 .map(r -> "ROLE_" + r.name())
-                .collect(Collectors.toList());
+                .toList();
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
@@ -65,7 +66,9 @@ public class JwtService {
         Boolean adminGlobal = claims.get("adminGlobal", Boolean.class);
         List<String> auths = claims.get("authorities", List.class);
         Collection<GrantedAuthority> authorities = auths == null ? List.of()
-                : auths.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+                : auths.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toUnmodifiableList());
         return new UsuarioPrincipal(empleadoId, nit, Boolean.TRUE.equals(adminGlobal), authorities);
     }
 }

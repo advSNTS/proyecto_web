@@ -2,9 +2,12 @@ package com.proyecto.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.CredencialRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginRequestDTO;
 import com.proyecto.web.dto.EmpleadoRequestDTO;
 import com.proyecto.web.dto.EmpleadoResponseDTO;
 import com.proyecto.web.dto.EmpresaRequestDTO;
+import com.proyecto.web.repository.CredencialRepository;
+import com.proyecto.web.service.VerificacionCorreoService;
 import com.proyecto.web.enums.TipoDocumento;
 import com.proyecto.web.service.EmpleadoService;
 import com.proyecto.web.service.EmpresaService;
@@ -41,6 +44,12 @@ class EmpleadoControllerTest {
 
     @Autowired
     private EmpresaService empresaService;
+
+    @Autowired
+    private CredencialRepository credencialRepository;
+
+    @Autowired
+    private VerificacionCorreoService verificacionCorreoService;
 
     private Long empleadoId;
     private String nitEmpresa = "NIT-EMP-CTRL-001";
@@ -145,6 +154,24 @@ class EmpleadoControllerTest {
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombre").value("Nombre Actualizado"));
+    }
+
+    @Test
+    void login_conCredencialesValidas_retorna200() throws Exception {
+        var credencial = credencialRepository.findByCorreo("juan@test.com").orElseThrow();
+        verificacionCorreoService.verificarCorreo(credencial.getTokenVerificacion());
+
+        EmpleadoLoginRequestDTO login = EmpleadoLoginRequestDTO.builder()
+                .correo("juan@test.com")
+                .contrasena("password123")
+                .build();
+
+        mockMvc.perform(post("/api/empleados/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.correo").value("juan@test.com"))
+                .andExpect(jsonPath("$.nombre").value("Juan Test"));
     }
 
     @Test

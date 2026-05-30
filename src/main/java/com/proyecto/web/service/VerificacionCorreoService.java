@@ -6,6 +6,7 @@ import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.CredencialRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class VerificacionCorreoService {
 
     private final CredencialRepository credencialRepository;
     private final CorreoService correoService;
+    private final ObjectProvider<VerificacionCorreoService> self;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.frontend.base-url:http://localhost:4200}")
@@ -97,7 +99,7 @@ public class VerificacionCorreoService {
                 ? credencial.getEmpleado().getNombre()
                 : null;
 
-        crearTokenYEnviar(credencial, nombre);
+        self.getObject().crearTokenYEnviar(credencial, nombre);
 
         return VerificacionCorreoResponseDTO.builder()
                 .verificado(false)

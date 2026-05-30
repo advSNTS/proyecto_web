@@ -2,7 +2,6 @@ package com.proyecto.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.GatewayRequestDTO;
-import com.proyecto.web.dto.GatewayResponseDTO;
 import com.proyecto.web.entity.Gateway;
 import com.proyecto.web.entity.Nodo;
 import com.proyecto.web.entity.Proceso;
@@ -12,7 +11,6 @@ import com.proyecto.web.repository.GatewayRepository;
 import com.proyecto.web.repository.NodoRepository;
 import com.proyecto.web.repository.ProcesoRepository;
 import com.proyecto.web.service.EmpresaService;
-import com.proyecto.web.service.GatewayService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.support.IntegrationTestData;
 import org.junit.jupiter.api.BeforeEach;

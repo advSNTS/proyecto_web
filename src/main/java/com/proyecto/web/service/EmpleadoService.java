@@ -56,7 +56,7 @@ public class EmpleadoService {
         }
 
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
-                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
+                .orElseThrow(() -> new BusinessException(EMPRESA_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
 
         Empleado empleado = EmpleadoMapper.toEntity(dto, empresa);
         empleado = empleadoRepository.save(empleado);
@@ -103,7 +103,7 @@ public class EmpleadoService {
     @Transactional(readOnly = true)
     public EmpleadoResponseDTO obtenerEmpleado(Long id) {
         Empleado empleado = empleadoRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
+                .orElseThrow(() -> new BusinessException(EMPLEADO_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
 
         return EmpleadoMapper.toResponse(empleado);
     }
@@ -111,10 +111,10 @@ public class EmpleadoService {
     @Transactional
     public EmpleadoResponseDTO actualizarEmpleado(Long id, EmpleadoRequestDTO dto) {
         Empleado empleado = empleadoRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
+                .orElseThrow(() -> new BusinessException(EMPLEADO_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
 
         Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
-                .orElseThrow(() -> new RuntimeException(EMPRESA_NO_ENCONTRADA));
+                .orElseThrow(() -> new BusinessException(EMPRESA_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
 
         empleado.setEmpresa(empresa);
         empleado.setNombre(dto.getNombre());
@@ -131,7 +131,7 @@ public class EmpleadoService {
     @Transactional
     public void eliminarEmpleado(Long id) {
         Empleado empleado = empleadoRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException(EMPLEADO_NO_ENCONTRADO));
+                .orElseThrow(() -> new BusinessException(EMPLEADO_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
 
         empleado.setDeleted(true);
 

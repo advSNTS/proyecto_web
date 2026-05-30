@@ -2,6 +2,7 @@ package com.proyecto.web;
 
 import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.dto.EmpresaResponseDTO;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.service.EmpresaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +94,6 @@ class EmpresaServiceTest {
 
         empresaService.eliminarEmpresa("TEST-005");
 
-        assertThrows(RuntimeException.class, () -> empresaService.obtenerEmpresa("TEST-005"));
+        assertThrows(BusinessException.class, () -> empresaService.obtenerEmpresa("TEST-005"));
     }
 }

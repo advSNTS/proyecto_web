@@ -1,16 +1,24 @@
 package com.proyecto.web;
 
 import com.proyecto.web.dto.CredencialRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginRequestDTO;
+import com.proyecto.web.dto.EmpleadoLoginResponseDTO;
 import com.proyecto.web.dto.EmpleadoRequestDTO;
 import com.proyecto.web.dto.EmpleadoResponseDTO;
 import com.proyecto.web.dto.EmpresaRequestDTO;
 import com.proyecto.web.enums.TipoDocumento;
+import com.proyecto.web.exception.AuthenticationException;
+import com.proyecto.web.exception.BusinessException;
+import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.service.EmpleadoService;
 import com.proyecto.web.service.EmpresaService;
+import com.proyecto.web.service.VerificacionCorreoService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +36,12 @@ class EmpleadoServiceTest {
 
     @Autowired
     private EmpresaService empresaService;
+
+    @Autowired
+    private CredencialRepository credencialRepository;
+
+    @Autowired
+    private VerificacionCorreoService verificacionCorreoService;
 
     @BeforeEach
     void setUp() {
@@ -189,5 +203,84 @@ class EmpleadoServiceTest {
 
         Long id = creado.getId();
         assertThrows(RuntimeException.class, () -> empleadoService.obtenerEmpleado(id));
+    }
+
+    @Test
+    @DisplayName("login rechaza credenciales vacías")
+    void login_credencialesVacias() {
+        assertThrows(AuthenticationException.class, () -> empleadoService.login(
+                EmpleadoLoginRequestDTO.builder().correo(" ").contrasena("").build()));
+    }
+
+    @Test
+    @DisplayName("login rechaza correo inexistente")
+    void login_correoInexistente() {
+        assertThrows(AuthenticationException.class, () -> empleadoService.login(
+                EmpleadoLoginRequestDTO.builder()
+                        .correo("noexiste@test.com")
+                        .contrasena("password123")
+                        .build()));
+    }
+
+    @Test
+    @DisplayName("login rechaza correo no verificado")
+    void login_correoNoVerificado() {
+        EmpleadoResponseDTO creado = empleadoService.crearEmpleado(EmpleadoRequestDTO.builder()
+                .nitEmpresa("NIT-EMPRESA-001")
+                .nombre("Sin Verificar")
+                .tipoDocumento(TipoDocumento.CC)
+                .numeroDocumento("login-unver-01")
+                .credencial(CredencialRequestDTO.builder()
+                        .correo("noverif@test.com")
+                        .contrasena("password123")
+                        .build())
+                .build());
+
+        assertNotNull(creado.getId());
+        assertThrows(AuthenticationException.class, () -> empleadoService.login(
+                EmpleadoLoginRequestDTO.builder()
+                        .correo("noverif@test.com")
+                        .contrasena("password123")
+                        .build()));
+    }
+
+    @Test
+    @DisplayName("login exitoso tras verificar correo")
+    void login_exitoTrasVerificacion() {
+        empleadoService.crearEmpleado(EmpleadoRequestDTO.builder()
+                .nitEmpresa("NIT-EMPRESA-001")
+                .nombre("Login Verificado")
+                .tipoDocumento(TipoDocumento.CC)
+                .numeroDocumento("login-ver-01")
+                .credencial(CredencialRequestDTO.builder()
+                        .correo("login.verif@test.com")
+                        .contrasena("password123")
+                        .build())
+                .build());
+
+        var credencial = credencialRepository.findByCorreoIgnoreCase("login.verif@test.com").orElseThrow();
+        verificacionCorreoService.verificarCorreo(credencial.getTokenVerificacion());
+
+        EmpleadoLoginResponseDTO response = empleadoService.login(EmpleadoLoginRequestDTO.builder()
+                .correo("login.verif@test.com")
+                .contrasena("password123")
+                .build());
+
+        assertEquals("login.verif@test.com", response.getCorreo());
+        assertNull(response.getToken());
+    }
+
+    @Test
+    @DisplayName("crearEmpleado sin credencial lanza BusinessException")
+    void crearEmpleado_sinCredencial() {
+        EmpleadoRequestDTO dto = EmpleadoRequestDTO.builder()
+                .nitEmpresa("NIT-EMPRESA-001")
+                .nombre("Sin Credencial")
+                .tipoDocumento(TipoDocumento.CC)
+                .numeroDocumento("sin-cred-01")
+                .build();
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> empleadoService.crearEmpleado(dto));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
     }
 }

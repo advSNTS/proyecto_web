@@ -202,7 +202,7 @@ class EmpleadoServiceTest {
         empleadoService.eliminarEmpleado(creado.getId());
 
         Long id = creado.getId();
-        assertThrows(RuntimeException.class, () -> empleadoService.obtenerEmpleado(id));
+        assertThrows(BusinessException.class, () -> empleadoService.obtenerEmpleado(id));
     }
 
     @Test

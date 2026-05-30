@@ -14,7 +14,6 @@ import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.repository.RolRepository;
 import com.proyecto.web.repository.RolXEmpleadoRepository;
 import com.proyecto.web.security.UsuarioPrincipal;
-import com.proyecto.web.service.LaneService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,10 +64,8 @@ class LaneServiceTest {
         Empresa empresa = Empresa.builder().nit("NIT-001").build();
         Pool pool = Pool.builder().id(10L).empresa(empresa).build();
         Rol rolPermitido = Rol.builder().id(7L).empresa(empresa).build();
-        Rol rolBloqueado = Rol.builder().id(9L).empresa(empresa).build();
 
         Lane visible = Lane.builder().id(1L).pool(pool).nombre("Visible").rolProceso(rolPermitido).build();
-        Lane oculta = Lane.builder().id(2L).pool(pool).nombre("Oculta").rolProceso(rolBloqueado).build();
 
         RolXEmpleado asignacion = RolXEmpleado.builder()
                 .empleado(Empleado.builder().id(100L).empresa(empresa).build())
@@ -118,8 +115,6 @@ class LaneServiceTest {
         Empresa empresa = Empresa.builder().nit("NIT-001").build();
         Pool pool = Pool.builder().id(10L).empresa(empresa).build();
         Rol rolPermitido = Rol.builder().id(7L).empresa(empresa).build();
-        Rol rolBloqueado = Rol.builder().id(9L).empresa(empresa).build();
-        Lane lane = Lane.builder().id(1L).pool(pool).nombre("Visible").rolProceso(rolBloqueado).build();
 
         RolXEmpleado asignacion = RolXEmpleado.builder()
                 .empleado(Empleado.builder().id(100L).empresa(empresa).build())
@@ -134,6 +129,48 @@ class LaneServiceTest {
         BusinessException ex = assertThrows(BusinessException.class, () -> laneService.obtener("NIT-001", 1L));
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+    }
+
+    @Test
+    void listarTodasPorEmpresa_deberiaRetornarTodasLasLanes() {
+        Empresa empresa = Empresa.builder().nit("NIT-001").build();
+        Pool pool = Pool.builder().id(10L).empresa(empresa).build();
+        Lane lane = Lane.builder().id(1L).pool(pool).nombre("Lane A").build();
+
+        when(poolRepository.findAllByEmpresa_NitAndEliminadoFalse("NIT-001"))
+                .thenReturn(List.of(pool));
+        when(laneRepository.findAllByPool_Empresa_NitAndEliminadoFalse("NIT-001"))
+                .thenReturn(List.of(lane));
+
+        List<LaneResponseDTO> result = laneService.listarTodasPorEmpresa("NIT-001");
+
+        assertEquals(1, result.size());
+        assertEquals("Lane A", result.get(0).getNombre());
+    }
+
+    @Test
+    void listarTodasPorPool_poolInexistente_deberiaLanzarNotFound() {
+        when(poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(99L, "NIT-001"))
+                .thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(
+                BusinessException.class,
+                () -> laneService.listarTodasPorPool("NIT-001", 99L));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+    }
+
+    @Test
+    void listarPorEmpresa_sinRolesVisibles_deberiaRetornarListaVacia() {
+        autenticar(principal(100L, "NIT-001", false));
+
+        when(rolXEmpleadoRepository.findAllByEmpleado_IdAndDeletedFalse(100L))
+                .thenReturn(List.of());
+
+        List<LaneResponseDTO> result = laneService.listarPorEmpresa("NIT-001");
+
+        assertTrue(result.isEmpty());
+        verify(laneRepository, never()).findAllByPool_Empresa_NitAndEliminadoFalse("NIT-001");
     }
 
     @Test

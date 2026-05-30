@@ -36,6 +36,7 @@ public class ProcesoService {
 
     private static final int LIMITE_HISTORIAL_POR_DEFECTO = 50;
     private static final int LIMITE_HISTORIAL_MAXIMO = 200;
+    private static final String MSG_POOL_NO_ENCONTRADO = "Pool no encontrado";
 
     private final ProcesoRepository procesoRepository;
     private final HistorialProcesoRepository historialProcesoRepository;
@@ -71,7 +72,7 @@ public class ProcesoService {
 
         if (poolId != null) {
             poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
-                    .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
 
             return procesoRepository
                     .findAllByEmpresa_NitAndPool_IdAndEstadoNotOrderByIdDesc(nitEmpresa, poolId, EstadoProceso.INACTIVO)
@@ -98,7 +99,7 @@ public class ProcesoService {
      */
     @Transactional(readOnly = true)
     public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id, String nitEmpresa) {
-        return obtenerProceso(id, nitEmpresa);
+        return ProcesoMapper.toResponse(buscarVigente(id, nitEmpresa));
     }
 
     @Transactional(readOnly = true)
@@ -166,11 +167,18 @@ public class ProcesoService {
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, String nitEmpresa) {
-        return obtenerHistorialProcesoParaEmpresa(idProceso, nitEmpresa, LIMITE_HISTORIAL_POR_DEFECTO);
+        return consultarHistorialProcesoParaEmpresa(idProceso, nitEmpresa, LIMITE_HISTORIAL_POR_DEFECTO);
     }
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(
+            Long idProceso,
+            String nitEmpresa,
+            Integer limite) {
+        return consultarHistorialProcesoParaEmpresa(idProceso, nitEmpresa, limite);
+    }
+
+    private List<HistorialProcesoResponseDTO> consultarHistorialProcesoParaEmpresa(
             Long idProceso,
             String nitEmpresa,
             Integer limite) {

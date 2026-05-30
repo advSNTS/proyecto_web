@@ -45,7 +45,7 @@ public class ActividadService {
         Nodo nodo = buscarNodo(dto.getNodoId());
 
         if (actividadRepository.existsByNodo_IdAndDeletedFalse(dto.getNodoId())) {
-            throw new RuntimeException("El nodo ya tiene una actividad asignada");
+            throw new BusinessException("El nodo ya tiene una actividad asignada", HttpStatus.CONFLICT);
         }
 
         Actividad actividad = ActividadMapper.toEntity(dto, nodo);
@@ -113,12 +113,12 @@ public class ActividadService {
 
     private Actividad buscarActiva(Long id) {
         return actividadRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Actividad no encontrada"));
+                .orElseThrow(() -> new BusinessException("Actividad no encontrada", HttpStatus.NOT_FOUND));
     }
 
     private Nodo buscarNodo(Long nodoId) {
         return nodoRepository.findByIdAndEliminadoFalse(nodoId)
-                .orElseThrow(() -> new RuntimeException("Nodo no encontrado"));
+                .orElseThrow(() -> new BusinessException("Nodo no encontrado", HttpStatus.NOT_FOUND));
     }
 
     private Lane resolverLaneParaProceso(Proceso proceso, Long laneId) {

@@ -11,6 +11,7 @@ import com.proyecto.web.enums.TipoNodo;
 import com.proyecto.web.service.ActividadService;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.NodoService;
+import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.service.ProcesoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -171,6 +172,71 @@ class ActividadServiceTest {
         actividadService.eliminarActividad(creada.getId(), null);
 
         Long id = creada.getId();
-        assertThrows(RuntimeException.class, () -> actividadService.obtenerActividad(id));
+        assertThrows(BusinessException.class, () -> actividadService.obtenerActividad(id));
+    }
+
+    @Test
+    void crearActividad_nodoConActividadExistente_deberiaLanzarBusinessException() {
+        ActividadRequestDTO dto = ActividadRequestDTO.builder()
+                .nodoId(nodoId)
+                .descripcion("Primera actividad")
+                .build();
+        actividadService.crearActividad(dto);
+
+        ActividadRequestDTO duplicada = ActividadRequestDTO.builder()
+                .nodoId(nodoId)
+                .descripcion("Segunda actividad")
+                .build();
+
+        assertThrows(BusinessException.class, () -> actividadService.crearActividad(duplicada));
+    }
+
+    @Test
+    void actualizarActividad_cambiandoNodo_deberiaActualizarNodo() {
+        ActividadRequestDTO dto = ActividadRequestDTO.builder()
+                .nodoId(nodoId)
+                .descripcion("Actividad original")
+                .build();
+        ActividadResponseDTO creada = actividadService.crearActividad(dto);
+
+        NodoRequestDTO nodoDTO2 = NodoRequestDTO.builder()
+                .nitEmpresa(NIT)
+                .idProceso(procesoId)
+                .tipo(TipoNodo.ACTIVIDAD)
+                .nombre("Nodo Actividad 2")
+                .coordenadaX(10L)
+                .coordenadaY(10L)
+                .build();
+        NodoResponseDTO nodo2 = nodoService.crearNodo(nodoDTO2);
+
+        ActividadRequestDTO update = ActividadRequestDTO.builder()
+                .nodoId(nodo2.getId())
+                .descripcion("Actividad movida")
+                .build();
+
+        ActividadResponseDTO actualizada =
+                actividadService.actualizarActividad(creada.getId(), update, null);
+
+        assertEquals(nodo2.getId(), actualizada.getNodoId());
+        assertEquals("Actividad movida", actualizada.getDescripcion());
+    }
+
+    @Test
+    void obtenerHistorial_deberiaRetornarCambios() {
+        ActividadRequestDTO dto = ActividadRequestDTO.builder()
+                .nodoId(nodoId)
+                .descripcion("Actividad historial")
+                .build();
+        ActividadResponseDTO creada = actividadService.crearActividad(dto);
+
+        ActividadRequestDTO update = ActividadRequestDTO.builder()
+                .nodoId(nodoId)
+                .descripcion("Actividad historial actualizada")
+                .build();
+        actividadService.actualizarActividad(creada.getId(), update, null);
+
+        var historial = actividadService.obtenerHistorial(creada.getId());
+
+        assertFalse(historial.isEmpty());
     }
 }

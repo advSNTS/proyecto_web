@@ -26,6 +26,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LaneService {
 
+    private static final String MSG_POOL_NO_ENCONTRADO = "Pool no encontrado";
+    private static final String MSG_LANE_NO_ENCONTRADA = "Lane no encontrada";
+    private static final String AUTHORITY_ROLE_ADMIN = "ROLE_ADMIN";
+    private static final String AUTHORITY_ROLE_EDITOR = "ROLE_EDITOR";
+
     private final LaneRepository laneRepository;
     private final PoolRepository poolRepository;
     private final RolRepository rolRepository;
@@ -34,7 +39,7 @@ public class LaneService {
     @Transactional
     public LaneResponseDTO crear(String nitEmpresa, LaneRequestDTO dto) {
         Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
         Lane lane = Lane.builder()
                 .pool(pool)
                 .nombre(dto.getNombre())
@@ -73,7 +78,7 @@ public class LaneService {
     @Transactional(readOnly = true)
     public List<LaneResponseDTO> listarPorPool(String nitEmpresa, Long poolId) {
         poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
 
         if (debeMostrarTodasLasLanes()) {
             return laneRepository.findAllByPool_IdAndEliminadoFalse(poolId).stream()
@@ -94,7 +99,7 @@ public class LaneService {
     @Transactional(readOnly = true)
     public List<LaneResponseDTO> listarTodasPorPool(String nitEmpresa, Long poolId) {
         poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
         return laneRepository.findAllByPool_IdAndEliminadoFalse(poolId).stream()
                 .map(this::toDto)
                 .toList();
@@ -105,14 +110,14 @@ public class LaneService {
         Lane lane;
         if (debeMostrarTodasLasLanes()) {
             lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalse(id, nitEmpresa)
-                    .orElseThrow(() -> new BusinessException("Lane no encontrada", HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
         } else {
             List<Long> rolIds = resolverRolIdsVisibles(nitEmpresa);
             if (rolIds.isEmpty()) {
-                throw new BusinessException("Lane no encontrada", HttpStatus.NOT_FOUND);
+                throw new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND);
             }
             lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalseAndRolProceso_IdIn(id, nitEmpresa, rolIds)
-                    .orElseThrow(() -> new BusinessException("Lane no encontrada", HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
         }
         return toDto(lane);
     }
@@ -120,9 +125,9 @@ public class LaneService {
     @Transactional
     public LaneResponseDTO actualizar(String nitEmpresa, Long id, LaneRequestDTO dto) {
         Lane lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalse(id, nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Lane no encontrada", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
         Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
         lane.setPool(pool);
         lane.setNombre(dto.getNombre());
         lane.setRolProceso(resolverRolObligatorio(nitEmpresa, dto.getRolProcesoId()));
@@ -132,7 +137,7 @@ public class LaneService {
     @Transactional
     public void eliminar(String nitEmpresa, Long id) {
         Lane lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalse(id, nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Lane no encontrada", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
         lane.setEliminado(true);
         laneRepository.save(lane);
     }
@@ -156,7 +161,7 @@ public class LaneService {
     private boolean tieneRolSistemaGestion(UsuarioPrincipal principal) {
         for (GrantedAuthority authority : principal.getAuthorities()) {
             String value = authority.getAuthority();
-            if ("ROLE_ADMIN".equals(value) || "ROLE_EDITOR".equals(value)) {
+            if (AUTHORITY_ROLE_ADMIN.equals(value) || AUTHORITY_ROLE_EDITOR.equals(value)) {
                 return true;
             }
         }

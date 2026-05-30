@@ -18,6 +18,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PoolService {
 
+    private static final String MSG_POOL_NO_ENCONTRADO = "Pool no encontrado";
+
     private final PoolRepository poolRepository;
     private final EmpresaRepository empresaRepository;
 
@@ -31,7 +33,7 @@ public class PoolService {
     public PoolResponseDTO obtener(Long id, String nitEmpresa) {
         validarNit(nitEmpresa);
         Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(id, nitEmpresa)
-                .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
         return toDto(pool);
     }
 

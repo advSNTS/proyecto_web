@@ -2,7 +2,6 @@ package com.proyecto.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyecto.web.dto.VerificacionCorreoRequestDTO;
-import com.proyecto.web.dto.VerificacionCorreoResponseDTO;
 import com.proyecto.web.entity.Credencial;
 import com.proyecto.web.entity.Empleado;
 import com.proyecto.web.entity.Empresa;
@@ -10,7 +9,6 @@ import com.proyecto.web.enums.TipoDocumento;
 import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.repository.EmpleadoRepository;
 import com.proyecto.web.repository.EmpresaRepository;
-import com.proyecto.web.service.VerificacionCorreoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

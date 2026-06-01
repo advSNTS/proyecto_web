@@ -126,7 +126,7 @@ class ArcoServiceTest {
     void obtenerPorProceso_deberiaRetornarArcosDelProceso() {
         arcoService.crearArco(arco(nodoDestinoId));
 
-        List<ArcoResponseDTO> lista = arcoService.obtenerPorProceso(procesoId, NIT);
+        List<ArcoResponseDTO> lista = arcoService.obtenerPorProceso(procesoId);
 
         assertNotNull(lista);
         assertFalse(lista.isEmpty());

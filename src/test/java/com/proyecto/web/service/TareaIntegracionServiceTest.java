@@ -82,7 +82,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"value\"}")
                 .build();
 
-        TareaIntegracionResponseDTO result = tareaIntegracionService.crear(nitEmpresa, dto);
+        TareaIntegracionResponseDTO result = tareaIntegracionService.crear( dto);
 
         assertNotNull(result.getId());
         assertEquals("{\"mapping\": \"value\"}", result.getPayloadMapping());
@@ -99,7 +99,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"value\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear( dto));
     }
 
     @Test
@@ -111,7 +111,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"value\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear( dto));
     }
 
     @Test
@@ -126,7 +126,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"value\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear( dto));
     }
 
     @Test
@@ -142,7 +142,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"value\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.crear( dto));
     }
 
     @Test
@@ -163,7 +163,7 @@ class TareaIntegracionServiceTest {
         tarea2.setEliminado(false);
         tareaIntegracionRepository.save(tarea2);
 
-        List<TareaIntegracionResponseDTO> result = tareaIntegracionService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<TareaIntegracionResponseDTO> result = tareaIntegracionService.listarPorProceso( proceso.getId());
 
         assertEquals(2, result.size());
     }
@@ -171,7 +171,7 @@ class TareaIntegracionServiceTest {
     @Test
     @DisplayName("Listar tareas retorna vacío si no hay")
     void testListarPorProceso_Empty() {
-        List<TareaIntegracionResponseDTO> result = tareaIntegracionService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<TareaIntegracionResponseDTO> result = tareaIntegracionService.listarPorProceso( proceso.getId());
 
         assertTrue(result.isEmpty());
     }
@@ -195,7 +195,7 @@ class TareaIntegracionServiceTest {
         eliminada.setEliminado(true);
         tareaIntegracionRepository.save(eliminada);
 
-        List<TareaIntegracionResponseDTO> result = tareaIntegracionService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<TareaIntegracionResponseDTO> result = tareaIntegracionService.listarPorProceso( proceso.getId());
 
         assertEquals(1, result.size());
         assertEquals("{\"mapping\": \"1\"}", result.get(0).getPayloadMapping());
@@ -211,7 +211,7 @@ class TareaIntegracionServiceTest {
         tarea.setEliminado(false);
         tarea = tareaIntegracionRepository.save(tarea);
 
-        TareaIntegracionResponseDTO result = tareaIntegracionService.obtener(nitEmpresa, tarea.getId());
+        TareaIntegracionResponseDTO result = tareaIntegracionService.obtener( tarea.getId());
 
         assertNotNull(result);
         assertEquals(tarea.getId(), result.getId());
@@ -221,7 +221,7 @@ class TareaIntegracionServiceTest {
     @Test
     @DisplayName("Fallar si tarea no existe")
     void testObtener_NotFound() {
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.obtener(nitEmpresa, 9999L));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.obtener( 9999L));
     }
 
     @Test
@@ -234,7 +234,7 @@ class TareaIntegracionServiceTest {
         tarea.setEliminado(true);
         Long tareaId = tareaIntegracionRepository.save(tarea).getId();
 
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.obtener(nitEmpresa, tareaId));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.obtener( tareaId));
     }
 
     @Test
@@ -253,7 +253,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"actualizado\"}")
                 .build();
 
-        TareaIntegracionResponseDTO result = tareaIntegracionService.actualizar(nitEmpresa, tarea.getId(), dto);
+        TareaIntegracionResponseDTO result = tareaIntegracionService.actualizar( tarea.getId(), dto);
 
         
         assertEquals("{\"mapping\": \"actualizado\"}", result.getPayloadMapping());
@@ -268,7 +268,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"test\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.actualizar(nitEmpresa, 9999L, dto));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.actualizar( 9999L, dto));
     }
 
     @Test
@@ -295,7 +295,7 @@ class TareaIntegracionServiceTest {
                 .payloadMapping("{\"mapping\": \"test\"}")
                 .build();
 
-        TareaIntegracionResponseDTO result = tareaIntegracionService.actualizar(nitEmpresa, tarea.getId(), dto);
+        TareaIntegracionResponseDTO result = tareaIntegracionService.actualizar( tarea.getId(), dto);
 
         assertEquals(mensajeExterno2.getId(), result.getMensajeExternoId());
     }
@@ -310,7 +310,7 @@ class TareaIntegracionServiceTest {
         tarea.setEliminado(false);
         tarea = tareaIntegracionRepository.save(tarea);
 
-        tareaIntegracionService.eliminar(nitEmpresa, tarea.getId());
+        tareaIntegracionService.eliminar( tarea.getId());
 
         // Verificar que está marcada como eliminada
         TareaIntegracion eliminada = tareaIntegracionRepository.findById(tarea.getId()).orElse(null);
@@ -321,6 +321,6 @@ class TareaIntegracionServiceTest {
     @Test
     @DisplayName("Fallar al eliminar si tarea no existe")
     void testEliminar_NotFound() {
-        assertThrows(BusinessException.class, () -> tareaIntegracionService.eliminar(nitEmpresa, 9999L));
+        assertThrows(BusinessException.class, () -> tareaIntegracionService.eliminar( 9999L));
     }
 }

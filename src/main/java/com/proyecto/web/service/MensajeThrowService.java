@@ -6,7 +6,7 @@ import com.proyecto.web.entity.MensajeThrow;
 import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.MensajeThrowRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +14,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class MensajeThrowService {
 
     private final MensajeThrowRepository mensajeThrowRepository;
     private final ProcesoService procesoService;
+    private final MensajeThrowService self;
 
+    public MensajeThrowService(
+            MensajeThrowRepository mensajeThrowRepository,
+            ProcesoService procesoService,
+            @Lazy MensajeThrowService self) {
+        this.mensajeThrowRepository = mensajeThrowRepository;
+        this.procesoService = procesoService;
+        this.self = self;
+    }
+
+    @Transactional
     public MensajeThrowResponseDTO crear(MensajeThrowRequestDTO dto) {
         Proceso p = procesoService.buscarVigente(dto.getProcesoId());
         MensajeThrow m = MensajeThrow.builder()
@@ -31,11 +41,15 @@ public class MensajeThrowService {
         return toDto(mensajeThrowRepository.save(m));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #crear(MensajeThrowRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public MensajeThrowResponseDTO crear(String nitEmpresa, MensajeThrowRequestDTO dto) {
-        return crear(dto);
+        return self.crear(dto);
     }
 
+    @Transactional(readOnly = true)
     public List<MensajeThrowResponseDTO> listarPorProceso(Long procesoId) {
         procesoService.buscarVigente(procesoId);
         return mensajeThrowRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
@@ -43,20 +57,27 @@ public class MensajeThrowService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #listarPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<MensajeThrowResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        return listarPorProceso(procesoId);
+        return self.listarPorProceso(procesoId);
     }
 
+    @Transactional(readOnly = true)
     public MensajeThrowResponseDTO obtener(Long id) {
         MensajeThrow m = buscarActivo(id);
         procesoService.buscarVigente(m.getProceso().getId());
         return toDto(m);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public MensajeThrowResponseDTO obtener(String nitEmpresa, Long id) {
-        return obtener(id);
+        return self.obtener(id);
     }
 
     @Transactional
@@ -70,9 +91,12 @@ public class MensajeThrowService {
         return toDto(mensajeThrowRepository.save(m));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #actualizar(Long, MensajeThrowRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public MensajeThrowResponseDTO actualizar(String nitEmpresa, Long id, MensajeThrowRequestDTO dto) {
-        return actualizar(id, dto);
+        return self.actualizar(id, dto);
     }
 
     @Transactional
@@ -83,9 +107,12 @@ public class MensajeThrowService {
         mensajeThrowRepository.save(m);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #eliminar(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void eliminar(String nitEmpresa, Long id) {
-        eliminar(id);
+        self.eliminar(id);
     }
 
     private MensajeThrow buscarActivo(Long id) {

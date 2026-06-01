@@ -68,7 +68,7 @@ class MensajeThrowServiceTest {
                 .payloadTemplate("{\"data\": \"value\"}")
                 .build();
 
-        MensajeThrowResponseDTO result = mensajeThrowService.crear(nitEmpresa, dto);
+        MensajeThrowResponseDTO result = mensajeThrowService.crear( dto);
 
         assertNotNull(result.getId());
         assertEquals("Mensaje Throw", result.getNombreMensaje());
@@ -84,7 +84,7 @@ class MensajeThrowServiceTest {
                 .payloadTemplate("{\"data\": \"value\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> mensajeThrowService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> mensajeThrowService.crear( dto));
     }
 
     @Test
@@ -99,7 +99,7 @@ class MensajeThrowServiceTest {
                 .payloadTemplate("{\"data\": \"value\"}")
                 .build();
 
-        assertThrows(Exception.class, () -> mensajeThrowService.crear(nitEmpresa, dto));
+        assertThrows(Exception.class, () -> mensajeThrowService.crear( dto));
     }
 
     @Test
@@ -120,7 +120,7 @@ class MensajeThrowServiceTest {
         m2.setEliminado(false);
         mensajeThrowRepository.save(m2);
 
-        List<MensajeThrowResponseDTO> result = mensajeThrowService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<MensajeThrowResponseDTO> result = mensajeThrowService.listarPorProceso( proceso.getId());
 
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(m -> "Mensaje 1".equals(m.getNombreMensaje())));
@@ -129,7 +129,7 @@ class MensajeThrowServiceTest {
     @Test
     @DisplayName("Listar mensajes retorna vacío si no hay")
     void testListarPorProceso_Empty() {
-        List<MensajeThrowResponseDTO> result = mensajeThrowService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<MensajeThrowResponseDTO> result = mensajeThrowService.listarPorProceso( proceso.getId());
 
         assertTrue(result.isEmpty());
     }
@@ -153,7 +153,7 @@ class MensajeThrowServiceTest {
         eliminado.setEliminado(true);
         mensajeThrowRepository.save(eliminado);
 
-        List<MensajeThrowResponseDTO> result = mensajeThrowService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<MensajeThrowResponseDTO> result = mensajeThrowService.listarPorProceso( proceso.getId());
 
         assertEquals(1, result.size());
         assertEquals("Activo", result.get(0).getNombreMensaje());
@@ -169,7 +169,7 @@ class MensajeThrowServiceTest {
         mensaje.setEliminado(false);
         mensaje = mensajeThrowRepository.save(mensaje);
 
-        MensajeThrowResponseDTO result = mensajeThrowService.obtener(nitEmpresa, mensaje.getId());
+        MensajeThrowResponseDTO result = mensajeThrowService.obtener( mensaje.getId());
 
         assertNotNull(result);
         assertEquals(mensaje.getId(), result.getId());
@@ -179,7 +179,7 @@ class MensajeThrowServiceTest {
     @Test
     @DisplayName("Fallar si mensaje no existe")
     void testObtener_NotFound() {
-        assertThrows(BusinessException.class, () -> mensajeThrowService.obtener(nitEmpresa, 9999L));
+        assertThrows(BusinessException.class, () -> mensajeThrowService.obtener( 9999L));
     }
 
     @Test
@@ -192,7 +192,7 @@ class MensajeThrowServiceTest {
         mensaje.setEliminado(true);
         Long mensajeId = mensajeThrowRepository.save(mensaje).getId();
 
-        assertThrows(BusinessException.class, () -> mensajeThrowService.obtener(nitEmpresa, mensajeId));
+        assertThrows(BusinessException.class, () -> mensajeThrowService.obtener( mensajeId));
     }
 
     @Test
@@ -211,7 +211,7 @@ class MensajeThrowServiceTest {
                 .payloadTemplate("{\"data\": \"actualizado\"}")
                 .build();
 
-        MensajeThrowResponseDTO result = mensajeThrowService.actualizar(nitEmpresa, mensaje.getId(), dto);
+        MensajeThrowResponseDTO result = mensajeThrowService.actualizar( mensaje.getId(), dto);
 
         assertEquals("Actualizado", result.getNombreMensaje());
         assertEquals("{\"data\": \"actualizado\"}", result.getPayloadTemplate());
@@ -226,7 +226,7 @@ class MensajeThrowServiceTest {
                 .payloadTemplate("{\"data\": \"test\"}")
                 .build();
 
-        assertThrows(BusinessException.class, () -> mensajeThrowService.actualizar(nitEmpresa, 9999L, dto));
+        assertThrows(BusinessException.class, () -> mensajeThrowService.actualizar( 9999L, dto));
     }
 
     @Test
@@ -255,7 +255,7 @@ class MensajeThrowServiceTest {
                 .payloadTemplate("{\"data\": \"test\"}")
                 .build();
 
-        MensajeThrowResponseDTO result = mensajeThrowService.actualizar(nitEmpresa, mensaje.getId(), dto);
+        MensajeThrowResponseDTO result = mensajeThrowService.actualizar( mensaje.getId(), dto);
 
         assertEquals(proceso2.getId(), result.getProcesoId());
     }
@@ -270,7 +270,7 @@ class MensajeThrowServiceTest {
         mensaje.setEliminado(false);
         mensaje = mensajeThrowRepository.save(mensaje);
 
-        mensajeThrowService.eliminar(nitEmpresa, mensaje.getId());
+        mensajeThrowService.eliminar( mensaje.getId());
 
         // Verificar que está marcado como eliminado
         MensajeThrow eliminado = mensajeThrowRepository.findById(mensaje.getId()).orElse(null);
@@ -281,6 +281,6 @@ class MensajeThrowServiceTest {
     @Test
     @DisplayName("Fallar al eliminar si mensaje no existe")
     void testEliminar_NotFound() {
-        assertThrows(BusinessException.class, () -> mensajeThrowService.eliminar(nitEmpresa, 9999L));
+        assertThrows(BusinessException.class, () -> mensajeThrowService.eliminar( 9999L));
     }
 }

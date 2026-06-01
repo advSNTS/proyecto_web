@@ -69,7 +69,7 @@ class PoolServiceTest {
         pool2.setEliminado(false);
         poolRepository.save(pool2);
 
-        List<PoolResponseDTO> result = poolService.listarPorEmpresa(nitEmpresa);
+        List<PoolResponseDTO> result = poolService.listarPorEmpresa();
 
         assertEquals(2, result.size());
     }
@@ -77,7 +77,7 @@ class PoolServiceTest {
     @Test
     @DisplayName("Listar pools retorna vacío si no hay")
     void testListarPorEmpresa_Empty() {
-        List<PoolResponseDTO> result = poolService.listarPorEmpresa(nitEmpresa);
+        List<PoolResponseDTO> result = poolService.listarPorEmpresa();
 
         assertTrue(result.isEmpty());
     }
@@ -103,7 +103,7 @@ class PoolServiceTest {
         eliminado.setEliminado(true);
         poolRepository.save(eliminado);
 
-        List<PoolResponseDTO> result = poolService.listarPorEmpresa(nitEmpresa);
+        List<PoolResponseDTO> result = poolService.listarPorEmpresa();
 
         assertEquals(1, result.size());
         assertEquals("Pool Activo", result.get(0).getNombre());
@@ -120,7 +120,7 @@ class PoolServiceTest {
         pool.setEliminado(false);
         pool = poolRepository.save(pool);
 
-        PoolResponseDTO result = poolService.obtener(pool.getId(), nitEmpresa);
+        PoolResponseDTO result = poolService.obtener(pool.getId());
 
         assertNotNull(result);
         assertEquals(pool.getId(), result.getId());
@@ -130,7 +130,7 @@ class PoolServiceTest {
     @Test
     @DisplayName("Fallar si pool no existe")
     void testObtener_NotFound() {
-        assertThrows(BusinessException.class, () -> poolService.obtener(9999L, nitEmpresa));
+        assertThrows(BusinessException.class, () -> poolService.obtener(9999L));
     }
 
     @Test
@@ -145,7 +145,7 @@ class PoolServiceTest {
         poolEliminado = poolRepository.save(poolEliminado);
         Long poolId = poolEliminado.getId();
 
-        assertThrows(BusinessException.class, () -> poolService.obtener(poolId, nitEmpresa));
+        assertThrows(BusinessException.class, () -> poolService.obtener(poolId));
     }
 
     @Test
@@ -157,7 +157,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        PoolResponseDTO result = poolService.crear(nitEmpresa, dto);
+        PoolResponseDTO result = poolService.crear( dto);
 
         assertNotNull(result.getId());
         assertEquals("Pool Nuevo", result.getNombre());
@@ -174,7 +174,7 @@ class PoolServiceTest {
                 .esDefault(true)
                 .build();
 
-        PoolResponseDTO result = poolService.crear(nitEmpresa, dto);
+        PoolResponseDTO result = poolService.crear( dto);
 
         assertTrue(result.isEsDefault());
     }
@@ -188,7 +188,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        assertThrows(BusinessException.class, () -> poolService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> poolService.crear( dto));
     }
 
     @Test
@@ -200,7 +200,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        assertThrows(BusinessException.class, () -> poolService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> poolService.crear( dto));
     }
 
     @Test
@@ -213,7 +213,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        poolService.crear(nitEmpresa, dto1);
+        poolService.crear( dto1);
 
         // Intentar crear otro con mismo nombre
         PoolRequestDTO dto2 = PoolRequestDTO.builder()
@@ -222,7 +222,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        assertThrows(BusinessException.class, () -> poolService.crear(nitEmpresa, dto2));
+        assertThrows(BusinessException.class, () -> poolService.crear( dto2));
     }
 
     @Test
@@ -235,7 +235,7 @@ class PoolServiceTest {
                 .esDefault(true)
                 .build();
 
-        PoolResponseDTO result1 = poolService.crear(nitEmpresa, dto1);
+        PoolResponseDTO result1 = poolService.crear( dto1);
         assertTrue(result1.isEsDefault());
 
         // Crear segundo pool como default
@@ -245,11 +245,11 @@ class PoolServiceTest {
                 .esDefault(true)
                 .build();
 
-        PoolResponseDTO result2 = poolService.crear(nitEmpresa, dto2);
+        PoolResponseDTO result2 = poolService.crear( dto2);
         assertTrue(result2.isEsDefault());
 
         // Verificar que el primero ya no es default
-        PoolResponseDTO verificacion1 = poolService.obtener(result1.getId(), nitEmpresa);
+        PoolResponseDTO verificacion1 = poolService.obtener(result1.getId());
         assertFalse(verificacion1.isEsDefault());
     }
 
@@ -262,7 +262,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        PoolResponseDTO result = poolService.crear(nitEmpresa, dto);
+        PoolResponseDTO result = poolService.crear( dto);
 
         assertNotNull(result.getId());
         assertNull(result.getDescripcion());
@@ -277,7 +277,7 @@ class PoolServiceTest {
                 .esDefault(null)
                 .build();
 
-        PoolResponseDTO result = poolService.crear(nitEmpresa, dto);
+        PoolResponseDTO result = poolService.crear( dto);
 
         assertFalse(result.isEsDefault());
     }
@@ -291,7 +291,7 @@ class PoolServiceTest {
                 .esDefault(false)
                 .build();
 
-        PoolResponseDTO result = poolService.crear(nitEmpresa, dto);
+        PoolResponseDTO result = poolService.crear( dto);
 
         assertEquals("Pool Test", result.getNombre());
     }

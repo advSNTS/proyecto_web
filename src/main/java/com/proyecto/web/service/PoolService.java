@@ -8,7 +8,7 @@ import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.util.SecurityUtils;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -17,13 +17,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class PoolService {
 
     private static final String MSG_POOL_NO_ENCONTRADO = "Pool no encontrado";
 
     private final PoolRepository poolRepository;
     private final EmpresaRepository empresaRepository;
+    private final PoolService self;
+
+    public PoolService(
+            PoolRepository poolRepository,
+            EmpresaRepository empresaRepository,
+            @Lazy PoolService self) {
+        this.poolRepository = poolRepository;
+        this.empresaRepository = empresaRepository;
+        this.self = self;
+    }
 
     @Transactional(readOnly = true)
     public List<PoolResponseDTO> listarPorEmpresa() {
@@ -33,9 +42,12 @@ public class PoolService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #listarPorEmpresa()}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<PoolResponseDTO> listarPorEmpresa(String nitEmpresa) {
-        return listarPorEmpresa();
+        return self.listarPorEmpresa();
     }
 
     @Transactional(readOnly = true)
@@ -47,9 +59,12 @@ public class PoolService {
         return toDto(pool);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public PoolResponseDTO obtener(Long id, String nitEmpresa) {
-        return obtener(id);
+        return self.obtener(id);
     }
 
     @Transactional
@@ -87,9 +102,12 @@ public class PoolService {
         return toDto(poolRepository.save(pool));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #crear(PoolRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public PoolResponseDTO crear(String nitEmpresa, PoolRequestDTO dto) {
-        return crear(dto);
+        return self.crear(dto);
     }
 
     private void validarPerteneceAEmpresa(Pool pool, String nitEmpresa) {

@@ -88,7 +88,7 @@ class ProcesoServiceTest {
 
         ProcesoResponseDTO creado = procesoService.crearProceso(dto);
 
-        ProcesoResponseDTO response = procesoService.obtenerProceso(creado.getId(), NIT);
+        ProcesoResponseDTO response = procesoService.obtenerProceso(creado.getId());
 
         assertNotNull(response);
         assertEquals("Proceso Test 002", response.getNombre());
@@ -100,7 +100,7 @@ class ProcesoServiceTest {
         procesoService.crearProceso(nuevo("P1", "C1"));
         procesoService.crearProceso(nuevo("P2", "C2"));
 
-        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(NIT, null);
+        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(null);
 
         assertNotNull(lista);
         assertFalse(lista.isEmpty());
@@ -112,7 +112,7 @@ class ProcesoServiceTest {
         procesoService.crearProceso(nuevo("E1", "Categoría E"));
         procesoService.crearProceso(nuevo("E2", "Categoría E"));
 
-        List<ProcesoResponseDTO> lista = procesoService.obtenerPorCategoria("Categoría E", NIT);
+        List<ProcesoResponseDTO> lista = procesoService.obtenerPorCategoria("Categoría E");
 
         assertNotNull(lista);
         assertTrue(lista.size() >= 2);
@@ -132,7 +132,7 @@ class ProcesoServiceTest {
                 .activo(true)
                 .build();
 
-        ProcesoResponseDTO response = procesoService.actualizarProceso(creado.getId(), update, null, NIT);
+        ProcesoResponseDTO response = procesoService.actualizarProceso(creado.getId(), update);
 
         assertEquals("Proceso Actualizado", response.getNombre());
         assertEquals("Descripción actualizada", response.getDescripcion());
@@ -145,7 +145,7 @@ class ProcesoServiceTest {
 
         ProcesoRequestDTO update = nuevo("Proceso Modificado", "Categoría G");
 
-        ProcesoResponseDTO response = procesoService.actualizarProceso(creado.getId(), update, 999L, NIT);
+        ProcesoResponseDTO response = procesoService.actualizarProceso(creado.getId(), update);
 
         assertEquals("Proceso Modificado", response.getNombre());
     }
@@ -154,37 +154,39 @@ class ProcesoServiceTest {
     void eliminarProceso_deberiaMarcarComoInactivo() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Para Eliminar", "Categoría H"));
 
-        procesoService.eliminarProceso(creado.getId(), null, NIT);
+        procesoService.eliminarProceso(creado.getId());
 
         Long id = creado.getId();
-        assertThrows(BusinessException.class, () -> procesoService.obtenerProceso(id, NIT));
+        assertThrows(BusinessException.class, () -> procesoService.obtenerProceso(id));
     }
 
     @Test
     void eliminarProceso_conIdEmpleado_deberiaRegistrarHistorial() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Eliminar Con Historial", "Categoría I"));
 
-        procesoService.eliminarProceso(creado.getId(), 888L, NIT);
+        procesoService.eliminarProceso(creado.getId());
 
         Long id = creado.getId();
-        assertThrows(BusinessException.class, () -> procesoService.obtenerProceso(id, NIT));
+        assertThrows(BusinessException.class, () -> procesoService.obtenerProceso(id));
     }
 
     @Test
     void obtenerDetalleProcesoRapido_deberiaRetornarMismoProceso() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Rapido", "Cat-R"));
 
-        ProcesoResponseDTO rapido = procesoService.obtenerDetalleProcesoRapido(creado.getId(), NIT);
+        ProcesoResponseDTO rapido = procesoService.obtenerDetalleProcesoRapido(creado.getId());
 
         assertEquals(creado.getId(), rapido.getId());
         assertEquals("Proceso Rapido", rapido.getNombre());
     }
 
     @Test
-    void buscarVigente_sinNitEmpresa_deberiaLanzarBadRequest() {
+    void buscarVigente_sinAutenticacion_deberiaLanzar() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Nit", "Cat-N"));
-
-        assertNotNull(procesoService.buscarVigente(creado.getId(), " "));
+        TestSecurityContext.clear();
+        Long procesoId = creado.getId();
+        assertThrows(com.proyecto.web.exception.AuthenticationException.class,
+                () -> procesoService.buscarVigente(procesoId));
     }
 
     @Test
@@ -193,11 +195,9 @@ class ProcesoServiceTest {
 
         procesoService.actualizarProceso(
                 creado.getId(),
-                nuevo("Proceso Historial Modificado", "Cat-H"),
-                null,
-                NIT);
+                nuevo("Proceso Historial Modificado", "Cat-H"));
 
-        var historial = procesoService.obtenerHistorialProcesoParaEmpresa(creado.getId(), NIT, 10);
+        var historial = procesoService.obtenerHistorialProcesoParaEmpresa(creado.getId(), 10);
 
         assertFalse(historial.isEmpty());
     }
@@ -208,12 +208,10 @@ class ProcesoServiceTest {
 
         procesoService.actualizarProceso(
                 creado.getId(),
-                nuevo("Proceso Resumen Actualizado", "Cat-S"),
-                null,
-                NIT);
+                nuevo("Proceso Resumen Actualizado", "Cat-S"));
 
         HistorialProcesoResumenDTO resumen =
-                procesoService.obtenerResumenHistorialProceso(creado.getId(), NIT, 5);
+                procesoService.obtenerResumenHistorialProceso(creado.getId(), 5);
 
         assertEquals(creado.getId(), resumen.getIdProceso());
         assertTrue(resumen.getTotalCambios() >= 1);
@@ -257,14 +255,14 @@ class ProcesoServiceTest {
                 .nombre("Proceso Pool B")
                 .descripcion("D")
                 .categoria("Cat-P")
-                .poolId(poolService.crear(NIT, PoolRequestDTO.builder()
+                .poolId(poolService.crear(PoolRequestDTO.builder()
                         .nombre("Pool Alterno")
                         .build()).getId())
                 .borrador(false)
                 .activo(true)
                 .build());
 
-        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(NIT, poolId);
+        List<ProcesoResponseDTO> lista = procesoService.obtenerProcesos(poolId);
 
         assertTrue(lista.stream().anyMatch(p -> p.getNombre().equals("Proceso Pool A")));
         assertTrue(lista.stream().allMatch(p -> poolId.equals(p.getPoolId())));
@@ -272,14 +270,14 @@ class ProcesoServiceTest {
 
     @Test
     void obtenerPorCategoria_sinNitEmpresa_deberiaLanzarBadRequest() {
-        List<ProcesoResponseDTO> response = procesoService.obtenerPorCategoria("Categoria", null);
+        List<ProcesoResponseDTO> response = procesoService.obtenerPorCategoria("Categoria");
         assertNotNull(response);
     }
 
     @Test
     void actualizarProceso_conPoolId_deberiaCambiarPool() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Pool Orig", "Cat-U"));
-        Long nuevoPoolId = poolService.crear(NIT, PoolRequestDTO.builder()
+        Long nuevoPoolId = poolService.crear(PoolRequestDTO.builder()
                 .nombre("Pool Destino Update")
                 .build()).getId();
 
@@ -294,7 +292,7 @@ class ProcesoServiceTest {
                 .build();
 
         ProcesoResponseDTO actualizado =
-                procesoService.actualizarProceso(creado.getId(), update, null, NIT);
+                procesoService.actualizarProceso(creado.getId(), update);
 
         assertEquals(nuevoPoolId, actualizado.getPoolId());
     }
@@ -304,9 +302,7 @@ class ProcesoServiceTest {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Hist De Proceso", "Cat-HP"));
         procesoService.actualizarProceso(
                 creado.getId(),
-                nuevo("Proceso Hist De Proceso Mod", "Cat-HP"),
-                null,
-                NIT);
+                nuevo("Proceso Hist De Proceso Mod", "Cat-HP"));
 
         var historial = procesoService.obtenerHistorialDeProceso(creado.getId());
 

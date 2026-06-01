@@ -10,8 +10,10 @@ import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.NodoMapper;
 import com.proyecto.web.repository.ArcoRepository;
 import com.proyecto.web.repository.NodoRepository;
+import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,35 +27,48 @@ public class NodoService {
     private final ProcesoService procesoService;
     private final ArcoRepository arcoRepository;
 
+    @Transactional
     public NodoResponseDTO crearNodo(NodoRequestDTO dto) {
-        validarNit(dto.getNitEmpresa());
-        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso(), dto.getNitEmpresa());
+        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso());
         Nodo nodo = NodoMapper.toEntity(dto, proceso);
         return NodoMapper.toResponse(nodoRepository.save(nodo));
     }
 
-    public List<NodoResponseDTO> obtenerPorProceso(Long idProceso, String nitEmpresa) {
-        procesoService.buscarVigente(idProceso, nitEmpresa);
+    @Transactional(readOnly = true)
+    public List<NodoResponseDTO> obtenerPorProceso(Long idProceso) {
+        procesoService.buscarVigente(idProceso);
         return nodoRepository.findAllByProceso_IdAndEliminadoFalse(idProceso).stream()
                 .map(NodoMapper::toResponse)
                 .toList();
     }
 
-    public List<NodoResponseDTO> obtenerPorProcesoYTipo(Long idProceso, TipoNodo tipo, String nitEmpresa) {
-        procesoService.buscarVigente(idProceso, nitEmpresa);
+    @Deprecated
+    public List<NodoResponseDTO> obtenerPorProceso(Long idProceso, String nitEmpresa) {
+        return obtenerPorProceso(idProceso);
+    }
+
+    @Transactional(readOnly = true)
+    public List<NodoResponseDTO> obtenerPorProcesoYTipo(Long idProceso, TipoNodo tipo) {
+        procesoService.buscarVigente(idProceso);
         return nodoRepository.findAllByProceso_IdAndTipoAndEliminadoFalse(idProceso, tipo).stream()
                 .map(NodoMapper::toResponse)
                 .toList();
     }
 
-    public NodoResponseDTO obtenerNodo(Long id) {
-        return NodoMapper.toResponse(buscar(id));
+    @Deprecated
+    public List<NodoResponseDTO> obtenerPorProcesoYTipo(Long idProceso, TipoNodo tipo, String nitEmpresa) {
+        return obtenerPorProcesoYTipo(idProceso, tipo);
     }
 
+    @Transactional(readOnly = true)
+    public NodoResponseDTO obtenerNodo(Long id) {
+        return NodoMapper.toResponse(buscarPropio(id));
+    }
+
+    @Transactional
     public NodoResponseDTO actualizarNodo(Long id, NodoRequestDTO dto) {
-        validarNit(dto.getNitEmpresa());
-        Nodo nodo = buscar(id);
-        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso(), dto.getNitEmpresa());
+        Nodo nodo = buscarPropio(id);
+        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso());
         nodo.setProceso(proceso);
         nodo.setTipo(dto.getTipo());
         nodo.setNombre(dto.getNombre());
@@ -63,24 +78,33 @@ public class NodoService {
     }
 
     @Transactional
-    public void eliminarNodo(Long id, String nitEmpresa) {
-        validarNit(nitEmpresa);
-        Nodo nodo = buscar(id);
-        procesoService.buscarVigente(nodo.getProceso().getId(), nitEmpresa);
+    public void eliminarNodo(Long id) {
+        Nodo nodo = buscarPropio(id);
+        procesoService.buscarVigente(nodo.getProceso().getId());
         marcarArcosEliminadosPorNodo(nodo.getId());
         nodo.setEliminado(true);
         nodoRepository.save(nodo);
     }
 
-    private void validarNit(String nit) {
-        if (nit == null || nit.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
-        }
+    @Deprecated
+    public void eliminarNodo(Long id, String nitEmpresa) {
+        eliminarNodo(id);
     }
 
     private Nodo buscar(Long id) {
         return nodoRepository.findByIdAndEliminadoFalse(id)
                 .orElseThrow(() -> new RuntimeException("Nodo no encontrado"));
+    }
+
+    private Nodo buscarPropio(Long id) {
+        Nodo nodo = buscar(id);
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        if (nodo.getProceso() == null
+                || nodo.getProceso().getEmpresa() == null
+                || !nitEmpresa.equals(nodo.getProceso().getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
+        }
+        return nodo;
     }
 
     private void marcarArcosEliminadosPorNodo(Long nodoId) {

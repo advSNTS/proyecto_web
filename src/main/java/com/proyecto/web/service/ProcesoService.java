@@ -19,10 +19,13 @@ import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.HistorialProcesoRepository;
 import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.repository.ProcesoRepository;
+import com.proyecto.web.security.UsuarioPrincipal;
+import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +39,6 @@ public class ProcesoService {
 
     private static final int LIMITE_HISTORIAL_POR_DEFECTO = 50;
     private static final int LIMITE_HISTORIAL_MAXIMO = 200;
-    private static final String MSG_POOL_NO_ENCONTRADO = "Pool no encontrado";
 
     private final ProcesoRepository procesoRepository;
     private final HistorialProcesoRepository historialProcesoRepository;
@@ -47,11 +49,9 @@ public class ProcesoService {
 
     @Transactional
     public ProcesoResponseDTO crearProceso(ProcesoRequestDTO dto) {
-        if (dto.getNitEmpresa() == null || dto.getNitEmpresa().isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio al crear un proceso", HttpStatus.BAD_REQUEST);
-        }
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
 
-        Empresa empresa = empresaRepository.findByNitAndDeletedFalse(dto.getNitEmpresa())
+        Empresa empresa = empresaRepository.findByNitAndDeletedFalse(nitEmpresa)
                 .orElseThrow(() -> new BusinessException("Empresa no encontrada", HttpStatus.NOT_FOUND));
 
         Pool pool = resolverPool(dto, empresa);
@@ -65,14 +65,14 @@ public class ProcesoService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProcesoResponseDTO> obtenerProcesos(String nitEmpresa, Long poolId) {
-        if (nitEmpresa == null || nitEmpresa.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
-        }
+    public List<ProcesoResponseDTO> obtenerProcesos(Long poolId) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
 
         if (poolId != null) {
-            poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
-                    .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
+            Pool pool = poolRepository.findById(poolId)
+                    .filter(p -> !p.isEliminado())
+                    .orElseThrow(() -> new BusinessException("Pool no encontrado", HttpStatus.NOT_FOUND));
+            validarPerteneceAEmpresa(pool, nitEmpresa);
 
             return procesoRepository
                     .findAllByEmpresa_NitAndPool_IdAndEstadoNotOrderByIdDesc(nitEmpresa, poolId, EstadoProceso.INACTIVO)
@@ -88,9 +88,19 @@ public class ProcesoService {
                 .toList();
     }
 
+    @Deprecated
+    public List<ProcesoResponseDTO> obtenerProcesos(String nitEmpresa, Long poolId) {
+        return obtenerProcesos(poolId);
+    }
+
     @Transactional(readOnly = true)
+    public ProcesoResponseDTO obtenerProceso(Long id) {
+        return ProcesoMapper.toResponse(buscarVigente(id));
+    }
+
+    @Deprecated
     public ProcesoResponseDTO obtenerProceso(Long id, String nitEmpresa) {
-        return ProcesoMapper.toResponse(buscarVigente(id, nitEmpresa));
+        return obtenerProceso(id);
     }
 
     /**
@@ -98,27 +108,36 @@ public class ProcesoService {
      * Así el encabezado/detalle del proceso puede pintarse de inmediato y el historial se carga aparte.
      */
     @Transactional(readOnly = true)
+    public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id) {
+        return obtenerProceso(id);
+    }
+
+    @Deprecated
     public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id, String nitEmpresa) {
-        return ProcesoMapper.toResponse(buscarVigente(id, nitEmpresa));
+        return obtenerDetalleProcesoRapido(id);
     }
 
     @Transactional(readOnly = true)
-    public List<ProcesoResponseDTO> obtenerPorCategoria(String categoria, String nitEmpresa) {
-        if (nitEmpresa == null || nitEmpresa.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
-        }
+    public List<ProcesoResponseDTO> obtenerPorCategoria(String categoria) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
 
         return procesoRepository
                 .findAllByCategoriaAndEstadoNotOrderByIdDesc(categoria, EstadoProceso.INACTIVO)
                 .stream()
-                .filter(p -> p.getEmpresa().getNit().equals(nitEmpresa))
+                .filter(p -> p.getEmpresa() != null && nitEmpresa.equals(p.getEmpresa().getNit()))
                 .map(ProcesoMapper::toResponse)
                 .toList();
     }
 
+    @Deprecated
+    public List<ProcesoResponseDTO> obtenerPorCategoria(String categoria, String nitEmpresa) {
+        return obtenerPorCategoria(categoria);
+    }
+
     @Transactional
-    public ProcesoResponseDTO actualizarProceso(Long id, ProcesoRequestDTO dto, Long idEmpleado, String nitEmpresa) {
-        Proceso proceso = buscarVigente(id, nitEmpresa);
+    public ProcesoResponseDTO actualizarProceso(Long id, ProcesoRequestDTO dto) {
+        Proceso proceso = buscarVigente(id);
+        Long idEmpleado = SecurityUtils.currentUser().map(UsuarioPrincipal::getEmpleadoId).orElse(null);
 
         String valorAnterior = serializar(ProcesoMapper.toResponse(proceso));
 
@@ -128,11 +147,10 @@ public class ProcesoService {
         proceso.setEstado(ProcesoMapper.resolveEstadoDesdeDto(dto));
 
         if (dto.getPoolId() != null) {
-            Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(
-                            dto.getPoolId(),
-                            proceso.getEmpresa().getNit())
+            Pool pool = poolRepository.findById(dto.getPoolId())
+                    .filter(p -> !p.isEliminado())
                     .orElseThrow(() -> new BusinessException("Pool no válido para la empresa", HttpStatus.BAD_REQUEST));
-
+            validarPerteneceAEmpresa(pool, proceso.getEmpresa().getNit());
             proceso.setPool(pool);
         }
 
@@ -145,9 +163,15 @@ public class ProcesoService {
         return ProcesoMapper.toResponse(guardado);
     }
 
+    @Deprecated
+    public ProcesoResponseDTO actualizarProceso(Long id, ProcesoRequestDTO dto, Long idEmpleado, String nitEmpresa) {
+        return actualizarProceso(id, dto);
+    }
+
     @Transactional
-    public void eliminarProceso(Long id, Long idEmpleado, String nitEmpresa) {
-        Proceso proceso = buscarVigente(id, nitEmpresa);
+    public void eliminarProceso(Long id) {
+        Proceso proceso = buscarVigente(id);
+        Long idEmpleado = SecurityUtils.currentUser().map(UsuarioPrincipal::getEmpleadoId).orElse(null);
 
         String valorAnterior = serializar(ProcesoMapper.toResponse(proceso));
 
@@ -160,29 +184,30 @@ public class ProcesoService {
         log.info("Proceso marcado INACTIVO id={}", id);
     }
 
+    @Deprecated
+    public void eliminarProceso(Long id, Long idEmpleado, String nitEmpresa) {
+        eliminarProceso(id);
+    }
+
     @Transactional(readOnly = true)
     public List<HistorialProceso> obtenerHistorialDeProceso(Long idProceso) {
         return historialProcesoRepository.findAllByProceso_IdOrderByFechaCambioDesc(idProceso);
     }
 
     @Transactional(readOnly = true)
+    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso) {
+        return obtenerHistorialProcesoParaEmpresa(idProceso, LIMITE_HISTORIAL_POR_DEFECTO);
+    }
+
+    @Deprecated
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, String nitEmpresa) {
-        return consultarHistorialProcesoParaEmpresa(idProceso, nitEmpresa, LIMITE_HISTORIAL_POR_DEFECTO);
+        return obtenerHistorialProcesoParaEmpresa(idProceso);
     }
 
     @Transactional(readOnly = true)
-    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(
-            Long idProceso,
-            String nitEmpresa,
-            Integer limite) {
-        return consultarHistorialProcesoParaEmpresa(idProceso, nitEmpresa, limite);
-    }
-
-    private List<HistorialProcesoResponseDTO> consultarHistorialProcesoParaEmpresa(
-            Long idProceso,
-            String nitEmpresa,
-            Integer limite) {
-        buscarVigente(idProceso, nitEmpresa);
+    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, Integer limite) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        buscarVigente(idProceso);
 
         int limiteSeguro = normalizarLimiteHistorial(limite);
 
@@ -192,12 +217,17 @@ public class ProcesoService {
                 PageRequest.of(0, limiteSeguro));
     }
 
-    @Transactional(readOnly = true)
-    public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(
+    @Deprecated
+    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(
             Long idProceso,
             String nitEmpresa,
             Integer limite) {
-        buscarVigente(idProceso, nitEmpresa);
+        return obtenerHistorialProcesoParaEmpresa(idProceso, limite);
+    }
+
+    @Transactional(readOnly = true)
+    public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(Long idProceso, Integer limite) {
+        buscarVigente(idProceso);
 
         int limiteSeguro = normalizarLimiteHistorial(limite);
 
@@ -211,14 +241,26 @@ public class ProcesoService {
                 .build();
     }
 
-    public Proceso buscarVigente(Long id, String nitEmpresa) {
-        if (nitEmpresa == null || nitEmpresa.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
-        }
+    @Deprecated
+    public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(
+            Long idProceso,
+            String nitEmpresa,
+            Integer limite) {
+        return obtenerResumenHistorialProceso(idProceso, limite);
+    }
 
-        return procesoRepository
-                .findByIdAndEmpresa_NitAndEstadoNot(id, nitEmpresa, EstadoProceso.INACTIVO)
+    public Proceso buscarVigente(Long id) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        Proceso proceso = procesoRepository
+                .findByIdAndEstadoNot(id, EstadoProceso.INACTIVO)
                 .orElseThrow(() -> new BusinessException("Proceso no encontrado", HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(proceso, nitEmpresa);
+        return proceso;
+    }
+
+    @Deprecated
+    public Proceso buscarVigente(Long id, String nitEmpresa) {
+        return buscarVigente(id);
     }
 
     /**
@@ -234,8 +276,11 @@ public class ProcesoService {
 
     private Pool resolverPool(ProcesoRequestDTO dto, Empresa empresa) {
         if (dto.getPoolId() != null) {
-            return poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), empresa.getNit())
+            Pool pool = poolRepository.findById(dto.getPoolId())
+                    .filter(p -> !p.isEliminado())
                     .orElseThrow(() -> new BusinessException("Pool no válido para la empresa", HttpStatus.BAD_REQUEST));
+            validarPerteneceAEmpresa(pool, empresa.getNit());
+            return pool;
         }
 
         return poolRepository
@@ -282,6 +327,18 @@ public class ProcesoService {
             return objectMapper.writeValueAsString(objeto);
         } catch (JsonProcessingException e) {
             throw new BusinessException("Error al serializar objeto a JSON", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void validarPerteneceAEmpresa(Proceso proceso, String nitEmpresa) {
+        if (proceso.getEmpresa() == null || !nitEmpresa.equals(proceso.getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
+        }
+    }
+
+    private void validarPerteneceAEmpresa(Pool pool, String nitEmpresa) {
+        if (pool.getEmpresa() == null || !nitEmpresa.equals(pool.getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
         }
     }
 }

@@ -9,8 +9,10 @@ import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.ArcoMapper;
 import com.proyecto.web.repository.ArcoRepository;
 import com.proyecto.web.repository.NodoRepository;
+import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +26,13 @@ public class ArcoService {
     private final ProcesoService procesoService;
     private final NodoRepository nodoRepository;
 
+    @Transactional
     public ArcoResponseDTO crearArco(ArcoRequestDTO dto) {
-        validarNit(dto.getNitEmpresa());
-        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso(), dto.getNitEmpresa());
+        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso());
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
 
-        Nodo origen = buscarNodoDeProceso(dto.getNodoOrigenId(), dto.getIdProceso());
-        Nodo destino = buscarNodoDeProceso(dto.getNodoDestinoId(), dto.getIdProceso());
+        Nodo origen = buscarNodoDeProceso(dto.getNodoOrigenId(), dto.getIdProceso(), nitEmpresa);
+        Nodo destino = buscarNodoDeProceso(dto.getNodoDestinoId(), dto.getIdProceso(), nitEmpresa);
 
         if (origen.getId().equals(destino.getId())) {
             throw new BusinessException("El nodo origen y destino no pueden ser el mismo");
@@ -44,39 +47,61 @@ public class ArcoService {
         return ArcoMapper.toResponse(arcoRepository.save(arco));
     }
 
-    public ArcoResponseDTO obtenerArco(Long id) {
-        return ArcoMapper.toResponse(buscar(id));
+    @Deprecated
+    public ArcoResponseDTO crearArco(ArcoRequestDTO dto, String nitEmpresa) {
+        return crearArco(dto);
     }
 
-    public List<ArcoResponseDTO> obtenerPorProceso(Long idProceso, String nitEmpresa) {
-        procesoService.buscarVigente(idProceso, nitEmpresa);
+    @Transactional(readOnly = true)
+    public ArcoResponseDTO obtenerArco(Long id) {
+        return ArcoMapper.toResponse(buscarPropio(id));
+    }
+
+    @Deprecated
+    public ArcoResponseDTO obtenerArco(Long id, String nitEmpresa) {
+        return obtenerArco(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArcoResponseDTO> obtenerPorProceso(Long idProceso) {
+        procesoService.buscarVigente(idProceso);
         return arcoRepository.findAllByProceso_IdAndEliminadoFalse(idProceso).stream()
                 .map(ArcoMapper::toResponse)
                 .toList();
     }
 
+    @Deprecated
+    public List<ArcoResponseDTO> obtenerPorProceso(Long idProceso, String nitEmpresa) {
+        return obtenerPorProceso(idProceso);
+    }
+
+    @Transactional(readOnly = true)
     public List<ArcoResponseDTO> obtenerSalientesDe(Long nodoOrigenId) {
-        return arcoRepository.findAllByNodoOrigen_Id(nodoOrigenId).stream()
+        Nodo nodoOrigen = buscarNodoPropio(nodoOrigenId);
+        return arcoRepository.findAllByNodoOrigen_Id(nodoOrigen.getId()).stream()
                 .filter(a -> !a.isEliminado())
                 .map(ArcoMapper::toResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<ArcoResponseDTO> obtenerEntrantesA(Long nodoDestinoId) {
-        return arcoRepository.findAllByNodoDestino_Id(nodoDestinoId).stream()
+        Nodo nodoDestino = buscarNodoPropio(nodoDestinoId);
+        return arcoRepository.findAllByNodoDestino_Id(nodoDestino.getId()).stream()
                 .filter(a -> !a.isEliminado())
                 .map(ArcoMapper::toResponse)
                 .toList();
     }
 
+    @Transactional
     public ArcoResponseDTO actualizarArco(Long id, ArcoRequestDTO dto) {
-        validarNit(dto.getNitEmpresa());
-        Arco arco = buscar(id);
+        Arco arco = buscarPropio(id);
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
 
-        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso(), dto.getNitEmpresa());
+        Proceso proceso = procesoService.buscarVigente(dto.getIdProceso());
 
-        Nodo origen = buscarNodoDeProceso(dto.getNodoOrigenId(), dto.getIdProceso());
-        Nodo destino = buscarNodoDeProceso(dto.getNodoDestinoId(), dto.getIdProceso());
+        Nodo origen = buscarNodoDeProceso(dto.getNodoOrigenId(), dto.getIdProceso(), nitEmpresa);
+        Nodo destino = buscarNodoDeProceso(dto.getNodoDestinoId(), dto.getIdProceso(), nitEmpresa);
 
         if (origen.getId().equals(destino.getId())) {
             throw new BusinessException("El nodo origen y destino no pueden ser el mismo");
@@ -96,11 +121,21 @@ public class ArcoService {
         return ArcoMapper.toResponse(arcoRepository.save(arco));
     }
 
+    @Deprecated
+    public ArcoResponseDTO actualizarArco(Long id, ArcoRequestDTO dto, String nitEmpresa) {
+        return actualizarArco(id, dto);
+    }
+
     @Transactional
     public void eliminarArco(Long id) {
-        Arco arco = buscar(id);
+        Arco arco = buscarPropio(id);
         arco.setEliminado(true);
         arcoRepository.save(arco);
+    }
+
+    @Deprecated
+    public void eliminarArco(Long id, String nitEmpresa) {
+        eliminarArco(id);
     }
 
     private boolean mismoArco(Arco arco, Long procesoId, Long origenId, Long destinoId) {
@@ -115,19 +150,37 @@ public class ArcoService {
                 .orElseThrow(() -> new RuntimeException("Arco no encontrado"));
     }
 
-    private void validarNit(String nit) {
-        if (nit == null || nit.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
+    private Arco buscarPropio(Long id) {
+        Arco arco = buscar(id);
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        if (arco.getProceso() == null
+                || arco.getProceso().getEmpresa() == null
+                || !nitEmpresa.equals(arco.getProceso().getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
         }
+        return arco;
     }
 
-    private Nodo buscarNodoDeProceso(Long nodoId, Long idProceso) {
+    private Nodo buscarNodoPropio(Long nodoId) {
         Nodo nodo = nodoRepository.findByIdAndEliminadoFalse(nodoId)
                 .orElseThrow(() -> new RuntimeException("Nodo no encontrado: " + nodoId));
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        if (nodo.getProceso() == null
+                || nodo.getProceso().getEmpresa() == null
+                || !nitEmpresa.equals(nodo.getProceso().getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
+        }
+        return nodo;
+    }
 
+    private Nodo buscarNodoDeProceso(Long nodoId, Long idProceso, String nitEmpresa) {
+        Nodo nodo = buscarNodoPropio(nodoId);
         if (!nodo.getProceso().getId().equals(idProceso)) {
             throw new BusinessException(
                     "El nodo " + nodoId + " no pertenece al proceso " + idProceso);
+        }
+        if (!nitEmpresa.equals(nodo.getProceso().getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
         }
         return nodo;
     }

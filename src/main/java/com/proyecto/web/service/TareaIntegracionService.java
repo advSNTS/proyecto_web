@@ -7,6 +7,7 @@ import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.entity.TareaIntegracion;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.TareaIntegracionRepository;
+import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,8 @@ public class TareaIntegracionService {
     private final ProcesoService procesoService;
     private final MensajeExternoService mensajeExternoService;
 
-    public TareaIntegracionResponseDTO crear(String nitEmpresa, TareaIntegracionRequestDTO dto) {
-        Proceso p = procesoService.buscarVigente(dto.getProcesoId(), nitEmpresa);
+    public TareaIntegracionResponseDTO crear(TareaIntegracionRequestDTO dto) {
+        Proceso p = procesoService.buscarVigente(dto.getProcesoId());
         MensajeExterno ext = mensajeExternoService.buscarActivoEntidad(dto.getMensajeExternoId());
         TareaIntegracion t = TareaIntegracion.builder()
                 .proceso(p)
@@ -34,24 +35,39 @@ public class TareaIntegracionService {
         return toDto(tareaIntegracionRepository.save(t));
     }
 
-    public List<TareaIntegracionResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        procesoService.buscarVigente(procesoId, nitEmpresa);
+    @Deprecated
+    public TareaIntegracionResponseDTO crear(String nitEmpresa, TareaIntegracionRequestDTO dto) {
+        return crear(dto);
+    }
+
+    public List<TareaIntegracionResponseDTO> listarPorProceso(Long procesoId) {
+        procesoService.buscarVigente(procesoId);
         return tareaIntegracionRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
                 .map(this::toDto)
                 .toList();
     }
 
-    public TareaIntegracionResponseDTO obtener(String nitEmpresa, Long id) {
+    @Deprecated
+    public List<TareaIntegracionResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
+        return listarPorProceso(procesoId);
+    }
+
+    public TareaIntegracionResponseDTO obtener(Long id) {
         TareaIntegracion t = buscarActivo(id);
-        procesoService.buscarVigente(t.getProceso().getId(), nitEmpresa);
+        procesoService.buscarVigente(t.getProceso().getId());
         return toDto(t);
     }
 
+    @Deprecated
+    public TareaIntegracionResponseDTO obtener(String nitEmpresa, Long id) {
+        return obtener(id);
+    }
+
     @Transactional
-    public TareaIntegracionResponseDTO actualizar(String nitEmpresa, Long id, TareaIntegracionRequestDTO dto) {
+    public TareaIntegracionResponseDTO actualizar(Long id, TareaIntegracionRequestDTO dto) {
         TareaIntegracion t = buscarActivo(id);
-        procesoService.buscarVigente(t.getProceso().getId(), nitEmpresa);
-        Proceso p = procesoService.buscarVigente(dto.getProcesoId(), nitEmpresa);
+        procesoService.buscarVigente(t.getProceso().getId());
+        Proceso p = procesoService.buscarVigente(dto.getProcesoId());
         MensajeExterno ext = mensajeExternoService.buscarActivoEntidad(dto.getMensajeExternoId());
         t.setProceso(p);
         t.setMensajeExterno(ext);
@@ -59,12 +75,22 @@ public class TareaIntegracionService {
         return toDto(tareaIntegracionRepository.save(t));
     }
 
+    @Deprecated
+    public TareaIntegracionResponseDTO actualizar(String nitEmpresa, Long id, TareaIntegracionRequestDTO dto) {
+        return actualizar(id, dto);
+    }
+
     @Transactional
-    public void eliminar(String nitEmpresa, Long id) {
+    public void eliminar(Long id) {
         TareaIntegracion t = buscarActivo(id);
-        procesoService.buscarVigente(t.getProceso().getId(), nitEmpresa);
+        procesoService.buscarVigente(t.getProceso().getId());
         t.setEliminado(true);
         tareaIntegracionRepository.save(t);
+    }
+
+    @Deprecated
+    public void eliminar(String nitEmpresa, Long id) {
+        eliminar(id);
     }
 
     private TareaIntegracion buscarActivo(Long id) {

@@ -6,7 +6,6 @@ import com.proyecto.web.entity.MensajeCatch;
 import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.MensajeCatchRepository;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +17,12 @@ public class MensajeCatchService {
 
     private final MensajeCatchRepository mensajeCatchRepository;
     private final ProcesoService procesoService;
-    private final MensajeCatchService self;
 
     public MensajeCatchService(
             MensajeCatchRepository mensajeCatchRepository,
-            ProcesoService procesoService,
-            @Lazy MensajeCatchService self) {
+            ProcesoService procesoService) {
         this.mensajeCatchRepository = mensajeCatchRepository;
         this.procesoService = procesoService;
-        this.self = self;
     }
 
     @Transactional
@@ -43,13 +39,6 @@ public class MensajeCatchService {
         return toDto(mensajeCatchRepository.save(m));
     }
 
-    /**
-     * @deprecated Usa {@link #crear(MensajeCatchRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public MensajeCatchResponseDTO crear(String nitEmpresa, MensajeCatchRequestDTO dto) {
-        return self.crear(dto);
-    }
 
     @Transactional(readOnly = true)
     public List<MensajeCatchResponseDTO> listarPorProceso(Long procesoId) {
@@ -59,13 +48,6 @@ public class MensajeCatchService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<MensajeCatchResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        return self.listarPorProceso(procesoId);
-    }
 
     @Transactional(readOnly = true)
     public MensajeCatchResponseDTO obtener(Long id) {
@@ -74,13 +56,6 @@ public class MensajeCatchService {
         return toDto(m);
     }
 
-    /**
-     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public MensajeCatchResponseDTO obtener(String nitEmpresa, Long id) {
-        return self.obtener(id);
-    }
 
     @Transactional
     public MensajeCatchResponseDTO actualizar(Long id, MensajeCatchRequestDTO dto) {
@@ -94,13 +69,6 @@ public class MensajeCatchService {
         return toDto(mensajeCatchRepository.save(m));
     }
 
-    /**
-     * @deprecated Usa {@link #actualizar(Long, MensajeCatchRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public MensajeCatchResponseDTO actualizar(String nitEmpresa, Long id, MensajeCatchRequestDTO dto) {
-        return self.actualizar(id, dto);
-    }
 
     @Transactional
     public void eliminar(Long id) {
@@ -110,13 +78,6 @@ public class MensajeCatchService {
         mensajeCatchRepository.save(m);
     }
 
-    /**
-     * @deprecated Usa {@link #eliminar(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void eliminar(String nitEmpresa, Long id) {
-        self.eliminar(id);
-    }
 
     private MensajeCatch buscarActivo(Long id) {
         return mensajeCatchRepository.findById(id)

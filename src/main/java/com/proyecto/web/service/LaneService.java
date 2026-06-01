@@ -13,7 +13,6 @@ import com.proyecto.web.repository.RolRepository;
 import com.proyecto.web.repository.RolXEmpleadoRepository;
 import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.util.SecurityUtils;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,19 +34,16 @@ public class LaneService {
     private final PoolRepository poolRepository;
     private final RolRepository rolRepository;
     private final RolXEmpleadoRepository rolXEmpleadoRepository;
-    private final LaneService self;
 
     public LaneService(
             LaneRepository laneRepository,
             PoolRepository poolRepository,
             RolRepository rolRepository,
-            RolXEmpleadoRepository rolXEmpleadoRepository,
-            @Lazy LaneService self) {
+            RolXEmpleadoRepository rolXEmpleadoRepository) {
         this.laneRepository = laneRepository;
         this.poolRepository = poolRepository;
         this.rolRepository = rolRepository;
         this.rolXEmpleadoRepository = rolXEmpleadoRepository;
-        this.self = self;
     }
 
     @Transactional
@@ -66,13 +62,6 @@ public class LaneService {
         return toDto(laneRepository.save(lane));
     }
 
-    /**
-     * @deprecated Usa {@link #crear(LaneRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public LaneResponseDTO crear(String nitEmpresa, LaneRequestDTO dto) {
-        return self.crear(dto);
-    }
 
     @Transactional(readOnly = true)
     public List<LaneResponseDTO> listarPorEmpresa() {
@@ -93,13 +82,6 @@ public class LaneService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarPorEmpresa()}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<LaneResponseDTO> listarPorEmpresa(String nitEmpresa) {
-        return self.listarPorEmpresa();
-    }
 
     @Transactional(readOnly = true)
     public List<LaneResponseDTO> listarTodasPorEmpresa() {
@@ -110,13 +92,6 @@ public class LaneService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarTodasPorEmpresa()}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<LaneResponseDTO> listarTodasPorEmpresa(String nitEmpresa) {
-        return self.listarTodasPorEmpresa();
-    }
 
     @Transactional(readOnly = true)
     public List<LaneResponseDTO> listarPorPool(Long poolId) {
@@ -142,13 +117,6 @@ public class LaneService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarPorPool(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<LaneResponseDTO> listarPorPool(String nitEmpresa, Long poolId) {
-        return self.listarPorPool(poolId);
-    }
 
     @Transactional(readOnly = true)
     public List<LaneResponseDTO> listarTodasPorPool(Long poolId) {
@@ -162,26 +130,12 @@ public class LaneService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarTodasPorPool(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<LaneResponseDTO> listarTodasPorPool(String nitEmpresa, Long poolId) {
-        return self.listarTodasPorPool(poolId);
-    }
 
     @Transactional(readOnly = true)
     public LaneResponseDTO obtener(Long id) {
         return toDto(buscarPropia(id));
     }
 
-    /**
-     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public LaneResponseDTO obtener(String nitEmpresa, Long id) {
-        return self.obtener(id);
-    }
 
     @Transactional
     public LaneResponseDTO actualizar(Long id, LaneRequestDTO dto) {
@@ -197,13 +151,6 @@ public class LaneService {
         return toDto(laneRepository.save(lane));
     }
 
-    /**
-     * @deprecated Usa {@link #actualizar(Long, LaneRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public LaneResponseDTO actualizar(String nitEmpresa, Long id, LaneRequestDTO dto) {
-        return self.actualizar(id, dto);
-    }
 
     @Transactional
     public void eliminar(Long id) {
@@ -212,13 +159,6 @@ public class LaneService {
         laneRepository.save(lane);
     }
 
-    /**
-     * @deprecated Usa {@link #eliminar(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void eliminar(String nitEmpresa, Long id) {
-        self.eliminar(id);
-    }
 
     private Rol resolverRolObligatorio(String nit, Long rolId) {
         if (rolId == null) {

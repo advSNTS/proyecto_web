@@ -22,7 +22,6 @@ import com.proyecto.web.repository.ProcesoRepository;
 import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -45,7 +44,6 @@ public class ProcesoService {
     private final EmpresaRepository empresaRepository;
     private final PoolRepository poolRepository;
     private final ObjectMapper objectMapper;
-    private final ProcesoService self;
 
     public ProcesoService(
             ProcesoRepository procesoRepository,
@@ -53,15 +51,13 @@ public class ProcesoService {
             EmpleadoRepository empleadoRepository,
             EmpresaRepository empresaRepository,
             PoolRepository poolRepository,
-            ObjectMapper objectMapper,
-            @Lazy ProcesoService self) {
+            ObjectMapper objectMapper) {
         this.procesoRepository = procesoRepository;
         this.historialProcesoRepository = historialProcesoRepository;
         this.empleadoRepository = empleadoRepository;
         this.empresaRepository = empresaRepository;
         this.poolRepository = poolRepository;
         this.objectMapper = objectMapper;
-        this.self = self;
     }
 
     @Transactional
@@ -105,26 +101,12 @@ public class ProcesoService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerProcesos(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<ProcesoResponseDTO> obtenerProcesos(String nitEmpresa, Long poolId) {
-        return self.obtenerProcesos(poolId);
-    }
 
     @Transactional(readOnly = true)
     public ProcesoResponseDTO obtenerProceso(Long id) {
         return ProcesoMapper.toResponse(buscarVigente(id));
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public ProcesoResponseDTO obtenerProceso(Long id, String nitEmpresa) {
-        return self.obtenerProceso(id);
-    }
 
     /**
      * Endpoint de soporte para pantallas de detalle: no consulta historial ni colecciones pesadas.
@@ -132,16 +114,9 @@ public class ProcesoService {
      */
     @Transactional(readOnly = true)
     public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id) {
-        return self.obtenerProceso(id);
+        return obtenerProceso(id);
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerDetalleProcesoRapido(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id, String nitEmpresa) {
-        return self.obtenerDetalleProcesoRapido(id);
-    }
 
     @Transactional(readOnly = true)
     public List<ProcesoResponseDTO> obtenerPorCategoria(String categoria) {
@@ -155,13 +130,6 @@ public class ProcesoService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerPorCategoria(String)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<ProcesoResponseDTO> obtenerPorCategoria(String categoria, String nitEmpresa) {
-        return self.obtenerPorCategoria(categoria);
-    }
 
     @Transactional
     public ProcesoResponseDTO actualizarProceso(Long id, ProcesoRequestDTO dto) {
@@ -192,13 +160,6 @@ public class ProcesoService {
         return ProcesoMapper.toResponse(guardado);
     }
 
-    /**
-     * @deprecated Usa {@link #actualizarProceso(Long, ProcesoRequestDTO)}; el empleado y NIT se resuelven del contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public ProcesoResponseDTO actualizarProceso(Long id, ProcesoRequestDTO dto, Long idEmpleado, String nitEmpresa) {
-        return self.actualizarProceso(id, dto);
-    }
 
     @Transactional
     public void eliminarProceso(Long id) {
@@ -216,13 +177,6 @@ public class ProcesoService {
         log.info("Proceso marcado INACTIVO id={}", id);
     }
 
-    /**
-     * @deprecated Usa {@link #eliminarProceso(Long)}; el empleado y NIT se resuelven del contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void eliminarProceso(Long id, Long idEmpleado, String nitEmpresa) {
-        self.eliminarProceso(id);
-    }
 
     @Transactional(readOnly = true)
     public List<HistorialProceso> obtenerHistorialDeProceso(Long idProceso) {
@@ -231,16 +185,9 @@ public class ProcesoService {
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso) {
-        return self.obtenerHistorialProcesoParaEmpresa(idProceso, LIMITE_HISTORIAL_POR_DEFECTO);
+        return obtenerHistorialProcesoParaEmpresa(idProceso, LIMITE_HISTORIAL_POR_DEFECTO);
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerHistorialProcesoParaEmpresa(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, String nitEmpresa) {
-        return self.obtenerHistorialProcesoParaEmpresa(idProceso);
-    }
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, Integer limite) {
@@ -255,16 +202,6 @@ public class ProcesoService {
                 PageRequest.of(0, limiteSeguro));
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerHistorialProcesoParaEmpresa(Long, Integer)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(
-            Long idProceso,
-            String nitEmpresa,
-            Integer limite) {
-        return self.obtenerHistorialProcesoParaEmpresa(idProceso, limite);
-    }
 
     @Transactional(readOnly = true)
     public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(Long idProceso, Integer limite) {
@@ -282,16 +219,6 @@ public class ProcesoService {
                 .build();
     }
 
-    /**
-     * @deprecated Usa {@link #obtenerResumenHistorialProceso(Long, Integer)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(
-            Long idProceso,
-            String nitEmpresa,
-            Integer limite) {
-        return self.obtenerResumenHistorialProceso(idProceso, limite);
-    }
 
     @Transactional(readOnly = true)
     public Proceso buscarVigente(Long id) {
@@ -303,13 +230,6 @@ public class ProcesoService {
         return proceso;
     }
 
-    /**
-     * @deprecated Usa {@link #buscarVigente(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public Proceso buscarVigente(Long id, String nitEmpresa) {
-        return self.buscarVigente(id);
-    }
 
     /**
      * Uso restringido, por ejemplo administrador global:

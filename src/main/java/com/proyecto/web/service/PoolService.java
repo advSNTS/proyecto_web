@@ -8,7 +8,6 @@ import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.util.SecurityUtils;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -23,15 +22,12 @@ public class PoolService {
 
     private final PoolRepository poolRepository;
     private final EmpresaRepository empresaRepository;
-    private final PoolService self;
 
     public PoolService(
             PoolRepository poolRepository,
-            EmpresaRepository empresaRepository,
-            @Lazy PoolService self) {
+            EmpresaRepository empresaRepository) {
         this.poolRepository = poolRepository;
         this.empresaRepository = empresaRepository;
-        this.self = self;
     }
 
     @Transactional(readOnly = true)
@@ -42,13 +38,6 @@ public class PoolService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarPorEmpresa()}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<PoolResponseDTO> listarPorEmpresa(String nitEmpresa) {
-        return self.listarPorEmpresa();
-    }
 
     @Transactional(readOnly = true)
     public PoolResponseDTO obtener(Long id) {
@@ -59,13 +48,6 @@ public class PoolService {
         return toDto(pool);
     }
 
-    /**
-     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public PoolResponseDTO obtener(Long id, String nitEmpresa) {
-        return self.obtener(id);
-    }
 
     @Transactional
     public PoolResponseDTO crear(PoolRequestDTO dto) {
@@ -102,13 +84,6 @@ public class PoolService {
         return toDto(poolRepository.save(pool));
     }
 
-    /**
-     * @deprecated Usa {@link #crear(PoolRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public PoolResponseDTO crear(String nitEmpresa, PoolRequestDTO dto) {
-        return self.crear(dto);
-    }
 
     private void validarPerteneceAEmpresa(Pool pool, String nitEmpresa) {
         if (pool.getEmpresa() == null || !nitEmpresa.equals(pool.getEmpresa().getNit())) {

@@ -7,7 +7,6 @@ import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.entity.TareaIntegracion;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.TareaIntegracionRepository;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,17 +19,14 @@ public class TareaIntegracionService {
     private final TareaIntegracionRepository tareaIntegracionRepository;
     private final ProcesoService procesoService;
     private final MensajeExternoService mensajeExternoService;
-    private final TareaIntegracionService self;
 
     public TareaIntegracionService(
             TareaIntegracionRepository tareaIntegracionRepository,
             ProcesoService procesoService,
-            MensajeExternoService mensajeExternoService,
-            @Lazy TareaIntegracionService self) {
+            MensajeExternoService mensajeExternoService) {
         this.tareaIntegracionRepository = tareaIntegracionRepository;
         this.procesoService = procesoService;
         this.mensajeExternoService = mensajeExternoService;
-        this.self = self;
     }
 
     @Transactional
@@ -46,13 +42,6 @@ public class TareaIntegracionService {
         return toDto(tareaIntegracionRepository.save(t));
     }
 
-    /**
-     * @deprecated Usa {@link #crear(TareaIntegracionRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public TareaIntegracionResponseDTO crear(String nitEmpresa, TareaIntegracionRequestDTO dto) {
-        return self.crear(dto);
-    }
 
     @Transactional(readOnly = true)
     public List<TareaIntegracionResponseDTO> listarPorProceso(Long procesoId) {
@@ -62,13 +51,6 @@ public class TareaIntegracionService {
                 .toList();
     }
 
-    /**
-     * @deprecated Usa {@link #listarPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public List<TareaIntegracionResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        return self.listarPorProceso(procesoId);
-    }
 
     @Transactional(readOnly = true)
     public TareaIntegracionResponseDTO obtener(Long id) {
@@ -77,13 +59,6 @@ public class TareaIntegracionService {
         return toDto(t);
     }
 
-    /**
-     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public TareaIntegracionResponseDTO obtener(String nitEmpresa, Long id) {
-        return self.obtener(id);
-    }
 
     @Transactional
     public TareaIntegracionResponseDTO actualizar(Long id, TareaIntegracionRequestDTO dto) {
@@ -97,13 +72,6 @@ public class TareaIntegracionService {
         return toDto(tareaIntegracionRepository.save(t));
     }
 
-    /**
-     * @deprecated Usa {@link #actualizar(Long, TareaIntegracionRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public TareaIntegracionResponseDTO actualizar(String nitEmpresa, Long id, TareaIntegracionRequestDTO dto) {
-        return self.actualizar(id, dto);
-    }
 
     @Transactional
     public void eliminar(Long id) {
@@ -113,13 +81,6 @@ public class TareaIntegracionService {
         tareaIntegracionRepository.save(t);
     }
 
-    /**
-     * @deprecated Usa {@link #eliminar(Long)}; el NIT se resuelve desde el contexto de seguridad.
-     */
-    @Deprecated(since = "1.0", forRemoval = true)
-    public void eliminar(String nitEmpresa, Long id) {
-        self.eliminar(id);
-    }
 
     private TareaIntegracion buscarActivo(Long id) {
         return tareaIntegracionRepository.findById(id)

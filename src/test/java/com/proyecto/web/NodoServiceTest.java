@@ -139,7 +139,7 @@ class NodoServiceTest {
     void eliminarNodo_deberiaMarcarEliminado() {
         NodoResponseDTO creado = nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Nodo Para Eliminar", 0L, 0L));
 
-        nodoService.eliminarNodo(creado.getId(), NIT);
+        nodoService.eliminarNodo(creado.getId());
 
         Long id = creado.getId();
         assertThrows(RuntimeException.class, () -> nodoService.obtenerNodo(id));

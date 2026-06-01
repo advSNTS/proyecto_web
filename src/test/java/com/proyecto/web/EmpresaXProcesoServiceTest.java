@@ -9,6 +9,7 @@ import com.proyecto.web.enums.Permiso;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.EmpresaXProcesoService;
 import com.proyecto.web.service.ProcesoService;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ class EmpresaXProcesoServiceTest {
         ownerDTO.setCorreo("owner@test.com");
         empresaService.crearEmpresa(ownerDTO);
         this.nitOwner = "NIT-OWNER-001";
+        TestSecurityContext.authenticate(nitOwner);
 
         // Crear proceso
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()

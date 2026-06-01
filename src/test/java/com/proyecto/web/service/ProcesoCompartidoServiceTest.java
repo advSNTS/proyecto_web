@@ -10,9 +10,11 @@ import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.enums.PermisoProcesoCompartido;
 import com.proyecto.web.enums.TipoDocumento;
+import com.proyecto.web.exception.AuthenticationException;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.CredencialRepository;
 import com.proyecto.web.repository.HistorialProcesoRepository;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -72,6 +74,8 @@ class ProcesoCompartidoServiceTest {
                 .orElseThrow()
                 .getEmpleado()
                 .getId();
+        
+        TestSecurityContext.authenticate(adminEmpleadoId, NIT, "ROLE_ADMIN", "ROLE_EDITOR", "ROLE_ADMIN_SISTEMA");
 
         ProcesoResponseDTO proceso = procesoService.crearProceso(ProcesoRequestDTO.builder()
                 .nitEmpresa(NIT)
@@ -98,8 +102,7 @@ class ProcesoCompartidoServiceTest {
                 .permiso(PermisoProcesoCompartido.LECTURA)
                 .build();
 
-        ProcesoCompartidoResponseDTO response = procesoCompartidoService.compartir(
-                procesoId, dto, adminEmpleadoId, NIT);
+        ProcesoCompartidoResponseDTO response = procesoCompartidoService.compartir(procesoId, dto);
 
         assertNotNull(response.getId());
         assertEquals(procesoId, response.getProcesoId());
@@ -123,15 +126,16 @@ class ProcesoCompartidoServiceTest {
     @Test
     @DisplayName("compartir sin empleado autenticado devuelve 401")
     void compartir_sinEmpleado() {
+        TestSecurityContext.clear();
+        
         ProcesoCompartidoRequestDTO dto = ProcesoCompartidoRequestDTO.builder()
                 .poolId(poolDestinoId)
                 .permiso(PermisoProcesoCompartido.LECTURA)
                 .build();
 
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> procesoCompartidoService.compartir(procesoId, dto, null, NIT));
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatus());
+        assertThrows(
+                AuthenticationException.class,
+                () -> procesoCompartidoService.compartir(procesoId, dto));
     }
 
     @Test
@@ -148,6 +152,9 @@ class ProcesoCompartidoServiceTest {
                         .build())
                 .build()).getId();
 
+        // Autenticar como lector (sin ADMIN role)
+        TestSecurityContext.authenticate(lectorId, NIT, "ROLE_EDITOR");
+
         ProcesoCompartidoRequestDTO dto = ProcesoCompartidoRequestDTO.builder()
                 .poolId(poolDestinoId)
                 .permiso(PermisoProcesoCompartido.LECTURA)
@@ -155,7 +162,7 @@ class ProcesoCompartidoServiceTest {
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> procesoCompartidoService.compartir(procesoId, dto, lectorId, NIT));
+                () -> procesoCompartidoService.compartir(procesoId, dto));
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatus());
     }
 
@@ -169,7 +176,7 @@ class ProcesoCompartidoServiceTest {
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> procesoCompartidoService.compartir(procesoId, dto, adminEmpleadoId, NIT));
+                () -> procesoCompartidoService.compartir(procesoId, dto));
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
     }
 
@@ -185,7 +192,7 @@ class ProcesoCompartidoServiceTest {
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> procesoCompartidoService.compartir(procesoId, dto, adminEmpleadoId, NIT));
+                () -> procesoCompartidoService.compartir(procesoId, dto));
         assertEquals(HttpStatus.CONFLICT, ex.getStatus());
     }
 
@@ -194,7 +201,7 @@ class ProcesoCompartidoServiceTest {
     void listarPorProceso_procesoNoEncontrado() {
         assertThrows(
                 BusinessException.class,
-                () -> procesoCompartidoService.listarPorProceso(NIT, 999_999L));
+                () -> procesoCompartidoService.listarPorProceso(999_999L));
     }
 
     private void compartir(PermisoProcesoCompartido permiso) {
@@ -203,8 +210,6 @@ class ProcesoCompartidoServiceTest {
                 ProcesoCompartidoRequestDTO.builder()
                         .poolId(poolDestinoId)
                         .permiso(permiso)
-                        .build(),
-                adminEmpleadoId,
-                NIT);
+                        .build());
     }
 }

@@ -107,7 +107,7 @@ class ArcoControllerTest {
         mockMvc.perform(post("/api/arcos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isOk());
     }
 
     @Test

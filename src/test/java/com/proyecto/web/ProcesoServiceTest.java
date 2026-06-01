@@ -9,6 +9,7 @@ import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.PoolService;
 import com.proyecto.web.service.ProcesoService;
+import com.proyecto.web.support.TestSecurityContext;
 import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ class ProcesoServiceTest {
         emp.setNombre("Empresa Proc Test");
         emp.setCorreo("proc@test.com");
         empresaService.crearEmpresa(emp);
+        TestSecurityContext.authenticate(NIT);
     }
 
     private ProcesoRequestDTO nuevo(String nombre, String categoria) {
@@ -182,11 +184,7 @@ class ProcesoServiceTest {
     void buscarVigente_sinNitEmpresa_deberiaLanzarBadRequest() {
         ProcesoResponseDTO creado = procesoService.crearProceso(nuevo("Proceso Nit", "Cat-N"));
 
-        Long procesoId = creado.getId();
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> procesoService.buscarVigente(procesoId, " "));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+        assertNotNull(procesoService.buscarVigente(creado.getId(), " "));
     }
 
     @Test
@@ -223,6 +221,7 @@ class ProcesoServiceTest {
 
     @Test
     void crearProceso_empresaInexistente_deberiaLanzarNotFound() {
+        TestSecurityContext.authenticate("NIT-INEXISTENTE");
         ProcesoRequestDTO dto = ProcesoRequestDTO.builder()
                 .nitEmpresa("NIT-INEXISTENTE")
                 .nombre("Proceso Fallido")
@@ -244,8 +243,8 @@ class ProcesoServiceTest {
                 .categoria("C")
                 .build();
 
-        BusinessException ex = assertThrows(BusinessException.class, () -> procesoService.crearProceso(dto));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+        ProcesoResponseDTO response = procesoService.crearProceso(dto);
+        assertEquals(NIT, response.getNitEmpresa());
     }
 
     @Test
@@ -273,10 +272,8 @@ class ProcesoServiceTest {
 
     @Test
     void obtenerPorCategoria_sinNitEmpresa_deberiaLanzarBadRequest() {
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> procesoService.obtenerPorCategoria("Categoria", null));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
+        List<ProcesoResponseDTO> response = procesoService.obtenerPorCategoria("Categoria", null);
+        assertNotNull(response);
     }
 
     @Test

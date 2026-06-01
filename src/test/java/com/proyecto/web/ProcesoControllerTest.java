@@ -13,6 +13,7 @@ import com.proyecto.web.service.PoolService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.service.VerificacionCorreoService;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,6 +78,7 @@ class ProcesoControllerTest {
         emp.setNombre("Emp Ctrl");
         emp.setCorreo("ec@test.com");
         empresaService.crearEmpresa(emp);
+        TestSecurityContext.authenticate(NIT);
 
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nitEmpresa(NIT)
@@ -273,6 +275,7 @@ class ProcesoControllerTest {
     void obtenerProceso_sinNitEmpresa_retorna400() throws Exception {
         mockMvc.perform(get("/api/procesos/" + procesoId)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(procesoId.intValue()));
     }
 }

@@ -10,6 +10,7 @@ import com.proyecto.web.enums.TipoNodo;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,7 @@ class NodoControllerTest {
         emp.setNombre("Emp Nodo Ctrl");
         emp.setCorreo("enc@test.com");
         empresaService.crearEmpresa(emp);
+        TestSecurityContext.authenticate(NIT);
 
         ProcesoRequestDTO procesoDTO = ProcesoRequestDTO.builder()
                 .nitEmpresa(NIT)

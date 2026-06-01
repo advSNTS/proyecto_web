@@ -27,6 +27,7 @@ import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.service.RolService;
 import com.proyecto.web.support.IntegrationTestData;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -97,6 +98,7 @@ class RequiereControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+        TestSecurityContext.authenticate(nitEmpresa);
         setupTestData();
     }
 

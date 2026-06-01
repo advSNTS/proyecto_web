@@ -34,6 +34,7 @@ public final class IntegrationTestData {
         empresa.setCorreo("contacto@" + nit.replaceAll("[^a-zA-Z0-9]", "") + ".test");
         empresaService.crearEmpresa(empresa);
 
+        TestSecurityContext.authenticate(nit);
         return procesoService.crearProceso(ProcesoRequestDTO.builder()
                 .nitEmpresa(nit)
                 .nombre("Proceso Test")

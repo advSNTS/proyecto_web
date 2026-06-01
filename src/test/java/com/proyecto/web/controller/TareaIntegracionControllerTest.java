@@ -12,6 +12,7 @@ import com.proyecto.web.repository.TareaIntegracionRepository;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.support.IntegrationTestData;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -98,8 +99,10 @@ class TareaIntegracionControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/tareas-integracion - Fallar si nit es nulo")
-    void testCrearTareaIntegracion_NitNulo() throws Exception {
+    @DisplayName("POST /api/tareas-integracion - Fallar sin autenticación")
+    void testCrearTareaIntegracion_SinAutenticacion() throws Exception {
+        TestSecurityContext.clear();
+        
         TareaIntegracionRequestDTO request = TareaIntegracionRequestDTO.builder()
                 .procesoId(proceso.getId())
                 .mensajeExternoId(mensajeExterno.getId())

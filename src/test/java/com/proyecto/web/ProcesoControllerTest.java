@@ -95,7 +95,7 @@ class ProcesoControllerTest {
         var credencial = credencialRepository.findByCorreo("ec@test.com").orElseThrow();
         verificacionCorreoService.verificarCorreo(credencial.getTokenVerificacion());
 
-        poolDestinoId = poolService.crear(NIT, PoolRequestDTO.builder()
+        poolDestinoId = poolService.crear(PoolRequestDTO.builder()
                 .nombre("Pool Colaboracion Ctrl")
                 .descripcion("Pool para compartir en tests")
                 .build()).getId();

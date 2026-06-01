@@ -137,7 +137,7 @@ class LaneServiceTest {
         when(laneRepository.findAllByPool_Empresa_NitAndEliminadoFalse("NIT-001"))
                 .thenReturn(List.of(lane));
 
-        List<LaneResponseDTO> result = laneService.listarTodasPorEmpresa("NIT-001");
+        List<LaneResponseDTO> result = laneService.listarTodasPorEmpresa();
 
         assertEquals(1, result.size());
         assertEquals("Lane A", result.get(0).getNombre());
@@ -164,7 +164,7 @@ class LaneServiceTest {
         when(rolXEmpleadoRepository.findAllByEmpleado_IdAndDeletedFalse(100L))
                 .thenReturn(List.of());
 
-        List<LaneResponseDTO> result = laneService.listarPorEmpresa("NIT-001");
+        List<LaneResponseDTO> result = laneService.listarPorEmpresa();
 
         assertTrue(result.isEmpty());
         verify(laneRepository, never()).findAllByPool_Empresa_NitAndEliminadoFalse("NIT-001");

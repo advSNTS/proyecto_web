@@ -6,13 +6,11 @@ import com.proyecto.web.entity.Arco;
 import com.proyecto.web.entity.Nodo;
 import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.enums.TipoNodo;
-import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.mapper.NodoMapper;
 import com.proyecto.web.repository.ArcoRepository;
 import com.proyecto.web.repository.NodoRepository;
 import com.proyecto.web.util.SecurityUtils;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,12 +18,23 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class NodoService {
 
     private final NodoRepository nodoRepository;
     private final ProcesoService procesoService;
     private final ArcoRepository arcoRepository;
+    private final NodoService self;
+
+    public NodoService(
+            NodoRepository nodoRepository,
+            ProcesoService procesoService,
+            ArcoRepository arcoRepository,
+            @Lazy NodoService self) {
+        this.nodoRepository = nodoRepository;
+        this.procesoService = procesoService;
+        this.arcoRepository = arcoRepository;
+        this.self = self;
+    }
 
     @Transactional
     public NodoResponseDTO crearNodo(NodoRequestDTO dto) {
@@ -42,9 +51,12 @@ public class NodoService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtenerPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<NodoResponseDTO> obtenerPorProceso(Long idProceso, String nitEmpresa) {
-        return obtenerPorProceso(idProceso);
+        return self.obtenerPorProceso(idProceso);
     }
 
     @Transactional(readOnly = true)
@@ -55,9 +67,12 @@ public class NodoService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtenerPorProcesoYTipo(Long, TipoNodo)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<NodoResponseDTO> obtenerPorProcesoYTipo(Long idProceso, TipoNodo tipo, String nitEmpresa) {
-        return obtenerPorProcesoYTipo(idProceso, tipo);
+        return self.obtenerPorProcesoYTipo(idProceso, tipo);
     }
 
     @Transactional(readOnly = true)
@@ -86,9 +101,12 @@ public class NodoService {
         nodoRepository.save(nodo);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #eliminarNodo(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void eliminarNodo(Long id, String nitEmpresa) {
-        eliminarNodo(id);
+        self.eliminarNodo(id);
     }
 
     private Nodo buscar(Long id) {

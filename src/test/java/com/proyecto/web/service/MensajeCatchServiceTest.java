@@ -68,7 +68,7 @@ class MensajeCatchServiceTest {
                 .iniciarNuevaInstancia(true)
                 .build();
 
-        MensajeCatchResponseDTO result = mensajeCatchService.crear(nitEmpresa, dto);
+        MensajeCatchResponseDTO result = mensajeCatchService.crear( dto);
 
         assertNotNull(result.getId());
         assertEquals("Mensaje Test", result.getNombreMensaje());
@@ -86,7 +86,7 @@ class MensajeCatchServiceTest {
                 .iniciarNuevaInstancia(false)
                 .build();
 
-        assertThrows(BusinessException.class, () -> mensajeCatchService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> mensajeCatchService.crear( dto));
     }
 
     @Test
@@ -102,7 +102,7 @@ class MensajeCatchServiceTest {
                 .iniciarNuevaInstancia(false)
                 .build();
 
-        assertThrows(BusinessException.class, () -> mensajeCatchService.crear(nitEmpresa, dto));
+        assertThrows(BusinessException.class, () -> mensajeCatchService.crear( dto));
     }
 
     @Test
@@ -125,7 +125,7 @@ class MensajeCatchServiceTest {
         m2.setEliminado(false);
         mensajeCatchRepository.save(m2);
 
-        List<MensajeCatchResponseDTO> result = mensajeCatchService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<MensajeCatchResponseDTO> result = mensajeCatchService.listarPorProceso( proceso.getId());
 
         assertEquals(2, result.size());
         assertTrue(result.stream().anyMatch(m -> "Mensaje 1".equals(m.getNombreMensaje())));
@@ -135,7 +135,7 @@ class MensajeCatchServiceTest {
     @Test
     @DisplayName("Listar mensajes retorna vacío si no hay")
     void testListarPorProceso_Empty() {
-        List<MensajeCatchResponseDTO> result = mensajeCatchService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<MensajeCatchResponseDTO> result = mensajeCatchService.listarPorProceso( proceso.getId());
 
         assertTrue(result.isEmpty());
     }
@@ -161,7 +161,7 @@ class MensajeCatchServiceTest {
         eliminado.setEliminado(true);
         mensajeCatchRepository.save(eliminado);
 
-        List<MensajeCatchResponseDTO> result = mensajeCatchService.listarPorProceso(nitEmpresa, proceso.getId());
+        List<MensajeCatchResponseDTO> result = mensajeCatchService.listarPorProceso( proceso.getId());
 
         assertEquals(1, result.size());
         assertEquals("Activo", result.get(0).getNombreMensaje());
@@ -178,7 +178,7 @@ class MensajeCatchServiceTest {
         mensaje.setEliminado(false);
         mensaje = mensajeCatchRepository.save(mensaje);
 
-        MensajeCatchResponseDTO result = mensajeCatchService.obtener(nitEmpresa, mensaje.getId());
+        MensajeCatchResponseDTO result = mensajeCatchService.obtener( mensaje.getId());
 
         assertNotNull(result);
         assertEquals(mensaje.getId(), result.getId());
@@ -188,7 +188,7 @@ class MensajeCatchServiceTest {
     @Test
     @DisplayName("Fallar si mensaje no existe")
     void testObtener_NotFound() {
-        assertThrows(BusinessException.class, () -> mensajeCatchService.obtener(nitEmpresa, 9999L));
+        assertThrows(BusinessException.class, () -> mensajeCatchService.obtener( 9999L));
     }
 
     @Test
@@ -202,7 +202,7 @@ class MensajeCatchServiceTest {
         mensaje.setEliminado(true);
         Long mensajeId = mensajeCatchRepository.save(mensaje).getId();
 
-        assertThrows(BusinessException.class, () -> mensajeCatchService.obtener(nitEmpresa, mensajeId));
+        assertThrows(BusinessException.class, () -> mensajeCatchService.obtener( mensajeId));
     }
 
     @Test
@@ -223,7 +223,7 @@ class MensajeCatchServiceTest {
                 .iniciarNuevaInstancia(true)
                 .build();
 
-        MensajeCatchResponseDTO result = mensajeCatchService.actualizar(nitEmpresa, mensaje.getId(), dto);
+        MensajeCatchResponseDTO result = mensajeCatchService.actualizar( mensaje.getId(), dto);
 
         assertEquals("Actualizado", result.getNombreMensaje());
         assertEquals("expr2", result.getCorrelacionExpr());
@@ -240,7 +240,7 @@ class MensajeCatchServiceTest {
                 .iniciarNuevaInstancia(false)
                 .build();
 
-        assertThrows(BusinessException.class, () -> mensajeCatchService.actualizar(nitEmpresa, 9999L, dto));
+        assertThrows(BusinessException.class, () -> mensajeCatchService.actualizar( 9999L, dto));
     }
 
     @Test
@@ -254,7 +254,7 @@ class MensajeCatchServiceTest {
         mensaje.setEliminado(false);
         mensaje = mensajeCatchRepository.save(mensaje);
 
-        mensajeCatchService.eliminar(nitEmpresa, mensaje.getId());
+        mensajeCatchService.eliminar( mensaje.getId());
 
         // Verificar que está marcado como eliminado
         MensajeCatch eliminado = mensajeCatchRepository.findById(mensaje.getId()).orElse(null);
@@ -265,7 +265,7 @@ class MensajeCatchServiceTest {
     @Test
     @DisplayName("Fallar al eliminar si mensaje no existe")
     void testEliminar_NotFound() {
-        assertThrows(BusinessException.class, () -> mensajeCatchService.eliminar(nitEmpresa, 9999L));
+        assertThrows(BusinessException.class, () -> mensajeCatchService.eliminar( 9999L));
     }
 
     @Test
@@ -278,7 +278,7 @@ class MensajeCatchServiceTest {
                 .iniciarNuevaInstancia(null)
                 .build();
 
-        MensajeCatchResponseDTO result = mensajeCatchService.crear(nitEmpresa, dto);
+        MensajeCatchResponseDTO result = mensajeCatchService.crear( dto);
 
         assertFalse(result.isIniciarNuevaInstancia());
     }

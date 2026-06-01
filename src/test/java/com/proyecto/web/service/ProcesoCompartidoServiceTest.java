@@ -87,7 +87,7 @@ class ProcesoCompartidoServiceTest {
                 .build());
         procesoId = proceso.getId();
 
-        var poolExtra = poolService.crear(NIT, PoolRequestDTO.builder()
+        var poolExtra = poolService.crear(PoolRequestDTO.builder()
                 .nombre("Pool Colaboracion")
                 .descripcion("Pool para compartir")
                 .build());
@@ -117,7 +117,7 @@ class ProcesoCompartidoServiceTest {
         compartir(PermisoProcesoCompartido.EDICION);
 
         List<ProcesoCompartidoResponseDTO> lista =
-                procesoCompartidoService.listarPorProceso(NIT, procesoId);
+                procesoCompartidoService.listarPorProceso(procesoId);
 
         assertEquals(1, lista.size());
         assertEquals(poolDestinoId, lista.get(0).getPoolId());

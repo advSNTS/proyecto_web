@@ -65,10 +65,10 @@ class ProcesoHistorialServiceTest {
                 .activo(true)
                 .build();
 
-        procesoService.actualizarProceso(creado.getId(), update, null, NIT);
+        procesoService.actualizarProceso(creado.getId(), update);
 
         List<HistorialProcesoResponseDTO> historial =
-                procesoService.obtenerHistorialProcesoParaEmpresa(creado.getId(), NIT);
+                procesoService.obtenerHistorialProcesoParaEmpresa(creado.getId());
 
         assertNotNull(historial);
         assertFalse(historial.isEmpty());

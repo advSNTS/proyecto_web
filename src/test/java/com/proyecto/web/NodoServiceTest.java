@@ -103,7 +103,7 @@ class NodoServiceTest {
         nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Nodo Uno", 0L, 0L));
         nodoService.crearNodo(nodo(TipoNodo.ARCO, "Nodo Dos", 0L, 0L));
 
-        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId, NIT);
+        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId);
 
         assertNotNull(lista);
         assertTrue(lista.size() >= 2);
@@ -116,7 +116,7 @@ class NodoServiceTest {
         nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Actividad 002", 0L, 0L));
         nodoService.crearNodo(nodo(TipoNodo.GATEWAY, "Gateway 001", 0L, 0L));
 
-        List<NodoResponseDTO> listaActividades = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.ACTIVIDAD, NIT);
+        List<NodoResponseDTO> listaActividades = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.ACTIVIDAD);
 
         assertNotNull(listaActividades);
         assertTrue(listaActividades.size() >= 2);
@@ -149,7 +149,7 @@ class NodoServiceTest {
     void obtenerPorProcesoYTipo_gateway_deberiaRetornarGateways() {
         nodoService.crearNodo(nodo(TipoNodo.GATEWAY, "Gateway Test", 0L, 0L));
 
-        List<NodoResponseDTO> listaGateways = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.GATEWAY, NIT);
+        List<NodoResponseDTO> listaGateways = nodoService.obtenerPorProcesoYTipo(procesoId, TipoNodo.GATEWAY);
 
         assertNotNull(listaGateways);
         assertFalse(listaGateways.isEmpty());
@@ -162,7 +162,7 @@ class NodoServiceTest {
         nodoService.crearNodo(nodo(TipoNodo.ARCO, "Transición", 0L, 0L));
         nodoService.crearNodo(nodo(TipoNodo.ACTIVIDAD, "Fin", 0L, 0L));
 
-        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId, NIT);
+        List<NodoResponseDTO> lista = nodoService.obtenerPorProceso(procesoId);
         assertTrue(lista.size() >= 3);
     }
 }

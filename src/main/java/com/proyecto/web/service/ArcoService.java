@@ -10,8 +10,7 @@ import com.proyecto.web.mapper.ArcoMapper;
 import com.proyecto.web.repository.ArcoRepository;
 import com.proyecto.web.repository.NodoRepository;
 import com.proyecto.web.util.SecurityUtils;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +18,23 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ArcoService {
 
     private final ArcoRepository arcoRepository;
     private final ProcesoService procesoService;
     private final NodoRepository nodoRepository;
+    private final ArcoService self;
+
+    public ArcoService(
+            ArcoRepository arcoRepository,
+            ProcesoService procesoService,
+            NodoRepository nodoRepository,
+            @Lazy ArcoService self) {
+        this.arcoRepository = arcoRepository;
+        this.procesoService = procesoService;
+        this.nodoRepository = nodoRepository;
+        this.self = self;
+    }
 
     @Transactional
     public ArcoResponseDTO crearArco(ArcoRequestDTO dto) {
@@ -47,9 +57,12 @@ public class ArcoService {
         return ArcoMapper.toResponse(arcoRepository.save(arco));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #crearArco(ArcoRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public ArcoResponseDTO crearArco(ArcoRequestDTO dto, String nitEmpresa) {
-        return crearArco(dto);
+        return self.crearArco(dto);
     }
 
     @Transactional(readOnly = true)
@@ -57,9 +70,12 @@ public class ArcoService {
         return ArcoMapper.toResponse(buscarPropio(id));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtenerArco(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public ArcoResponseDTO obtenerArco(Long id, String nitEmpresa) {
-        return obtenerArco(id);
+        return self.obtenerArco(id);
     }
 
     @Transactional(readOnly = true)
@@ -70,9 +86,12 @@ public class ArcoService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtenerPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<ArcoResponseDTO> obtenerPorProceso(Long idProceso, String nitEmpresa) {
-        return obtenerPorProceso(idProceso);
+        return self.obtenerPorProceso(idProceso);
     }
 
     @Transactional(readOnly = true)
@@ -121,9 +140,12 @@ public class ArcoService {
         return ArcoMapper.toResponse(arcoRepository.save(arco));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #actualizarArco(Long, ArcoRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public ArcoResponseDTO actualizarArco(Long id, ArcoRequestDTO dto, String nitEmpresa) {
-        return actualizarArco(id, dto);
+        return self.actualizarArco(id, dto);
     }
 
     @Transactional
@@ -133,9 +155,12 @@ public class ArcoService {
         arcoRepository.save(arco);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #eliminarArco(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void eliminarArco(Long id, String nitEmpresa) {
-        eliminarArco(id);
+        self.eliminarArco(id);
     }
 
     private boolean mismoArco(Arco arco, Long procesoId, Long origenId, Long destinoId) {

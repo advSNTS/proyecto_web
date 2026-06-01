@@ -6,7 +6,7 @@ import com.proyecto.web.entity.MensajeCatch;
 import com.proyecto.web.entity.Proceso;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.MensajeCatchRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +14,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class MensajeCatchService {
 
     private final MensajeCatchRepository mensajeCatchRepository;
     private final ProcesoService procesoService;
+    private final MensajeCatchService self;
 
+    public MensajeCatchService(
+            MensajeCatchRepository mensajeCatchRepository,
+            ProcesoService procesoService,
+            @Lazy MensajeCatchService self) {
+        this.mensajeCatchRepository = mensajeCatchRepository;
+        this.procesoService = procesoService;
+        this.self = self;
+    }
+
+    @Transactional
     public MensajeCatchResponseDTO crear(MensajeCatchRequestDTO dto) {
         Proceso p = procesoService.buscarVigente(dto.getProcesoId());
         boolean iniciar = Boolean.TRUE.equals(dto.getIniciarNuevaInstancia());
@@ -33,11 +43,15 @@ public class MensajeCatchService {
         return toDto(mensajeCatchRepository.save(m));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #crear(MensajeCatchRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public MensajeCatchResponseDTO crear(String nitEmpresa, MensajeCatchRequestDTO dto) {
-        return crear(dto);
+        return self.crear(dto);
     }
 
+    @Transactional(readOnly = true)
     public List<MensajeCatchResponseDTO> listarPorProceso(Long procesoId) {
         procesoService.buscarVigente(procesoId);
         return mensajeCatchRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
@@ -45,20 +59,27 @@ public class MensajeCatchService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #listarPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<MensajeCatchResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        return listarPorProceso(procesoId);
+        return self.listarPorProceso(procesoId);
     }
 
+    @Transactional(readOnly = true)
     public MensajeCatchResponseDTO obtener(Long id) {
         MensajeCatch m = buscarActivo(id);
         procesoService.buscarVigente(m.getProceso().getId());
         return toDto(m);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #obtener(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public MensajeCatchResponseDTO obtener(String nitEmpresa, Long id) {
-        return obtener(id);
+        return self.obtener(id);
     }
 
     @Transactional
@@ -73,9 +94,12 @@ public class MensajeCatchService {
         return toDto(mensajeCatchRepository.save(m));
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #actualizar(Long, MensajeCatchRequestDTO)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public MensajeCatchResponseDTO actualizar(String nitEmpresa, Long id, MensajeCatchRequestDTO dto) {
-        return actualizar(id, dto);
+        return self.actualizar(id, dto);
     }
 
     @Transactional
@@ -86,9 +110,12 @@ public class MensajeCatchService {
         mensajeCatchRepository.save(m);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #eliminar(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public void eliminar(String nitEmpresa, Long id) {
-        eliminar(id);
+        self.eliminar(id);
     }
 
     private MensajeCatch buscarActivo(Long id) {

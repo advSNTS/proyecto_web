@@ -18,8 +18,8 @@ import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.repository.ProcesoCompartidoRepository;
 import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.util.SecurityUtils;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,6 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ProcesoCompartidoService {
 
     private final ProcesoService procesoService;
@@ -41,6 +40,26 @@ public class ProcesoCompartidoService {
     private final HistorialProcesoRepository historialProcesoRepository;
     private final EmpleadoRepository empleadoRepository;
     private final ObjectMapper objectMapper;
+    private final ProcesoCompartidoService self;
+
+    public ProcesoCompartidoService(
+            ProcesoService procesoService,
+            PoolRepository poolRepository,
+            ProcesoCompartidoRepository procesoCompartidoRepository,
+            EmpleadoRolSistemaRepository empleadoRolSistemaRepository,
+            HistorialProcesoRepository historialProcesoRepository,
+            EmpleadoRepository empleadoRepository,
+            ObjectMapper objectMapper,
+            @Lazy ProcesoCompartidoService self) {
+        this.procesoService = procesoService;
+        this.poolRepository = poolRepository;
+        this.procesoCompartidoRepository = procesoCompartidoRepository;
+        this.empleadoRolSistemaRepository = empleadoRolSistemaRepository;
+        this.historialProcesoRepository = historialProcesoRepository;
+        this.empleadoRepository = empleadoRepository;
+        this.objectMapper = objectMapper;
+        this.self = self;
+    }
 
     @Transactional
     public ProcesoCompartidoResponseDTO compartir(Long procesoId, ProcesoCompartidoRequestDTO dto) {
@@ -79,15 +98,19 @@ public class ProcesoCompartidoService {
         return toDto(pc);
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #compartir(Long, ProcesoCompartidoRequestDTO)}; el empleado y NIT se resuelven del contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public ProcesoCompartidoResponseDTO compartir(
             Long procesoId,
             ProcesoCompartidoRequestDTO dto,
             Long empleadoId,
             String nitEmpresa) {
-        return compartir(procesoId, dto);
+        return self.compartir(procesoId, dto);
     }
 
+    @Transactional(readOnly = true)
     public List<ProcesoCompartidoResponseDTO> listarPorProceso(Long procesoId) {
         procesoService.buscarVigente(procesoId);
         return procesoCompartidoRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
@@ -95,9 +118,12 @@ public class ProcesoCompartidoService {
                 .toList();
     }
 
-    @Deprecated
+    /**
+     * @deprecated Usa {@link #listarPorProceso(Long)}; el NIT se resuelve desde el contexto de seguridad.
+     */
+    @Deprecated(since = "1.0", forRemoval = true)
     public List<ProcesoCompartidoResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        return listarPorProceso(procesoId);
+        return self.listarPorProceso(procesoId);
     }
 
     private void registrarHistorial(Proceso proceso, Long idEmpleado, Map<String, Object> cambios) {

@@ -22,6 +22,7 @@ import com.proyecto.web.repository.ProcesoRepository;
 import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.util.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -44,6 +45,7 @@ public class ProcesoService {
     private final EmpresaRepository empresaRepository;
     private final PoolRepository poolRepository;
     private final ObjectMapper objectMapper;
+    private final ProcesoService self;
 
     public ProcesoService(
             ProcesoRepository procesoRepository,
@@ -51,13 +53,15 @@ public class ProcesoService {
             EmpleadoRepository empleadoRepository,
             EmpresaRepository empresaRepository,
             PoolRepository poolRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            @Lazy ProcesoService self) {
         this.procesoRepository = procesoRepository;
         this.historialProcesoRepository = historialProcesoRepository;
         this.empleadoRepository = empleadoRepository;
         this.empresaRepository = empresaRepository;
         this.poolRepository = poolRepository;
         this.objectMapper = objectMapper;
+        this.self = self;
     }
 
     @Transactional
@@ -104,7 +108,7 @@ public class ProcesoService {
 
     @Transactional(readOnly = true)
     public ProcesoResponseDTO obtenerProceso(Long id) {
-        return ProcesoMapper.toResponse(buscarVigente(id));
+        return ProcesoMapper.toResponse(self.buscarVigente(id));
     }
 
 
@@ -114,7 +118,7 @@ public class ProcesoService {
      */
     @Transactional(readOnly = true)
     public ProcesoResponseDTO obtenerDetalleProcesoRapido(Long id) {
-        return obtenerProceso(id);
+        return self.obtenerProceso(id);
     }
 
 
@@ -133,7 +137,7 @@ public class ProcesoService {
 
     @Transactional
     public ProcesoResponseDTO actualizarProceso(Long id, ProcesoRequestDTO dto) {
-        Proceso proceso = buscarVigente(id);
+        Proceso proceso = self.buscarVigente(id);
         Long idEmpleado = SecurityUtils.currentUser().map(UsuarioPrincipal::getEmpleadoId).orElse(null);
 
         String valorAnterior = serializar(ProcesoMapper.toResponse(proceso));
@@ -163,7 +167,7 @@ public class ProcesoService {
 
     @Transactional
     public void eliminarProceso(Long id) {
-        Proceso proceso = buscarVigente(id);
+        Proceso proceso = self.buscarVigente(id);
         Long idEmpleado = SecurityUtils.currentUser().map(UsuarioPrincipal::getEmpleadoId).orElse(null);
 
         String valorAnterior = serializar(ProcesoMapper.toResponse(proceso));
@@ -185,14 +189,14 @@ public class ProcesoService {
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso) {
-        return obtenerHistorialProcesoParaEmpresa(idProceso, LIMITE_HISTORIAL_POR_DEFECTO);
+        return self.obtenerHistorialProcesoParaEmpresa(idProceso, LIMITE_HISTORIAL_POR_DEFECTO);
     }
 
 
     @Transactional(readOnly = true)
     public List<HistorialProcesoResponseDTO> obtenerHistorialProcesoParaEmpresa(Long idProceso, Integer limite) {
         String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
-        buscarVigente(idProceso);
+        self.buscarVigente(idProceso);
 
         int limiteSeguro = normalizarLimiteHistorial(limite);
 
@@ -205,7 +209,7 @@ public class ProcesoService {
 
     @Transactional(readOnly = true)
     public HistorialProcesoResumenDTO obtenerResumenHistorialProceso(Long idProceso, Integer limite) {
-        buscarVigente(idProceso);
+        self.buscarVigente(idProceso);
 
         int limiteSeguro = normalizarLimiteHistorial(limite);
 

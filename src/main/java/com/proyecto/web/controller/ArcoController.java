@@ -29,9 +29,8 @@ public class ArcoController {
     // Todos los arcos de un proceso
     @GetMapping("/proceso/{idProceso}")
     public ResponseEntity<List<ArcoResponseDTO>> porProceso(
-            @PathVariable Long idProceso,
-            @RequestParam String nitEmpresa) {
-        return ResponseEntity.ok(arcoService.obtenerPorProceso(idProceso, nitEmpresa));
+            @PathVariable Long idProceso) {
+        return ResponseEntity.ok(arcoService.obtenerPorProceso(idProceso));
     }
 
     // Arcos que salen de un nodo

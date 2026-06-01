@@ -16,9 +16,12 @@ import com.proyecto.web.repository.EmpleadoRolSistemaRepository;
 import com.proyecto.web.repository.HistorialProcesoRepository;
 import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.repository.ProcesoCompartidoRepository;
+import com.proyecto.web.security.UsuarioPrincipal;
+import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,12 +43,10 @@ public class ProcesoCompartidoService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public ProcesoCompartidoResponseDTO compartir(
-            Long procesoId,
-            ProcesoCompartidoRequestDTO dto,
-            Long empleadoId,
-            String nitEmpresa) {
-
+    public ProcesoCompartidoResponseDTO compartir(Long procesoId, ProcesoCompartidoRequestDTO dto) {
+        UsuarioPrincipal currentUser = SecurityUtils.requireCurrentUser();
+        Long empleadoId = currentUser.getEmpleadoId();
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
         if (empleadoId == null) {
             throw new BusinessException("Se requiere empleado autenticado para compartir", HttpStatus.UNAUTHORIZED);
         }
@@ -54,9 +55,11 @@ public class ProcesoCompartidoService {
             throw new BusinessException("Solo administradores de sistema pueden compartir procesos", HttpStatus.FORBIDDEN);
         }
 
-        Proceso proceso = procesoService.buscarVigente(procesoId, nitEmpresa);
-        Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), nitEmpresa)
+        Proceso proceso = procesoService.buscarVigente(procesoId);
+        Pool pool = poolRepository.findById(dto.getPoolId())
+                .filter(p -> !p.isEliminado())
                 .orElseThrow(() -> new BusinessException("Pool no encontrado en la empresa", HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(pool, nitEmpresa);
 
         if (procesoCompartidoRepository.existsByProceso_IdAndPool_IdAndEliminadoFalse(procesoId, pool.getId())) {
             throw new BusinessException("El proceso ya está compartido con ese pool", HttpStatus.CONFLICT);
@@ -76,11 +79,25 @@ public class ProcesoCompartidoService {
         return toDto(pc);
     }
 
-    public List<ProcesoCompartidoResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        procesoService.buscarVigente(procesoId, nitEmpresa);
+    @Deprecated
+    public ProcesoCompartidoResponseDTO compartir(
+            Long procesoId,
+            ProcesoCompartidoRequestDTO dto,
+            Long empleadoId,
+            String nitEmpresa) {
+        return compartir(procesoId, dto);
+    }
+
+    public List<ProcesoCompartidoResponseDTO> listarPorProceso(Long procesoId) {
+        procesoService.buscarVigente(procesoId);
         return procesoCompartidoRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    @Deprecated
+    public List<ProcesoCompartidoResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
+        return listarPorProceso(procesoId);
     }
 
     private void registrarHistorial(Proceso proceso, Long idEmpleado, Map<String, Object> cambios) {
@@ -112,5 +129,11 @@ public class ProcesoCompartidoService {
                 .poolId(pc.getPool().getId())
                 .permiso(pc.getPermiso())
                 .build();
+    }
+
+    private void validarPerteneceAEmpresa(Pool pool, String nitEmpresa) {
+        if (pool.getEmpresa() == null || !nitEmpresa.equals(pool.getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
+        }
     }
 }

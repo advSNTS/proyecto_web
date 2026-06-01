@@ -2,11 +2,8 @@ package com.proyecto.web.controller;
 
 import com.proyecto.web.dto.PoolRequestDTO;
 import com.proyecto.web.dto.PoolResponseDTO;
-import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.service.PoolService;
-import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,29 +23,17 @@ public class PoolController {
     private final PoolService poolService;
 
     @GetMapping
-    public ResponseEntity<List<PoolResponseDTO>> listar(@RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(poolService.listarPorEmpresa(requerirNit(nitEmpresa)));
+    public ResponseEntity<List<PoolResponseDTO>> listar() {
+        return ResponseEntity.ok(poolService.listarPorEmpresa());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PoolResponseDTO> obtener(
-            @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(poolService.obtener(id, requerirNit(nitEmpresa)));
+    public ResponseEntity<PoolResponseDTO> obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(poolService.obtener(id));
     }
 
     @PostMapping
-    public ResponseEntity<PoolResponseDTO> crear(
-            @RequestBody PoolRequestDTO dto,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(poolService.crear(requerirNit(nitEmpresa), dto));
-    }
-
-    private String requerirNit(String nitEmpresa) {
-        String nit = SecurityUtils.resolverNitEmpresa(nitEmpresa);
-        if (nit == null || nit.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
-        }
-        return nit;
+    public ResponseEntity<PoolResponseDTO> crear(@RequestBody PoolRequestDTO dto) {
+        return ResponseEntity.ok(poolService.crear(dto));
     }
 }

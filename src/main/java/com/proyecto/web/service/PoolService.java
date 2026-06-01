@@ -7,8 +7,10 @@ import com.proyecto.web.entity.Pool;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.PoolRepository;
+import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,23 +25,36 @@ public class PoolService {
     private final PoolRepository poolRepository;
     private final EmpresaRepository empresaRepository;
 
-    public List<PoolResponseDTO> listarPorEmpresa(String nitEmpresa) {
-        validarNit(nitEmpresa);
+    @Transactional(readOnly = true)
+    public List<PoolResponseDTO> listarPorEmpresa() {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
         return poolRepository.findAllByEmpresa_NitAndEliminadoFalse(nitEmpresa).stream()
                 .map(this::toDto)
                 .toList();
     }
 
-    public PoolResponseDTO obtener(Long id, String nitEmpresa) {
-        validarNit(nitEmpresa);
-        Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(id, nitEmpresa)
+    @Deprecated
+    public List<PoolResponseDTO> listarPorEmpresa(String nitEmpresa) {
+        return listarPorEmpresa();
+    }
+
+    @Transactional(readOnly = true)
+    public PoolResponseDTO obtener(Long id) {
+        Pool pool = poolRepository.findById(id)
+                .filter(p -> !p.isEliminado())
                 .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(pool, SecurityUtils.requireAuthenticatedNitEmpresa());
         return toDto(pool);
     }
 
+    @Deprecated
+    public PoolResponseDTO obtener(Long id, String nitEmpresa) {
+        return obtener(id);
+    }
+
     @Transactional
-    public PoolResponseDTO crear(String nitEmpresa, PoolRequestDTO dto) {
-        validarNit(nitEmpresa);
+    public PoolResponseDTO crear(PoolRequestDTO dto) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
         if (dto == null || dto.getNombre() == null || dto.getNombre().isBlank()) {
             throw new BusinessException("El nombre del pool es obligatorio", HttpStatus.BAD_REQUEST);
         }
@@ -72,9 +87,14 @@ public class PoolService {
         return toDto(poolRepository.save(pool));
     }
 
-    private void validarNit(String nit) {
-        if (nit == null || nit.isBlank()) {
-            throw new BusinessException("nitEmpresa es obligatorio", HttpStatus.BAD_REQUEST);
+    @Deprecated
+    public PoolResponseDTO crear(String nitEmpresa, PoolRequestDTO dto) {
+        return crear(dto);
+    }
+
+    private void validarPerteneceAEmpresa(Pool pool, String nitEmpresa) {
+        if (pool.getEmpresa() == null || !nitEmpresa.equals(pool.getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
         }
     }
 

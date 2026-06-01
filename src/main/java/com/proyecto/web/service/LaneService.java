@@ -15,6 +15,7 @@ import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +38,12 @@ public class LaneService {
     private final RolXEmpleadoRepository rolXEmpleadoRepository;
 
     @Transactional
-    public LaneResponseDTO crear(String nitEmpresa, LaneRequestDTO dto) {
-        Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), nitEmpresa)
+    public LaneResponseDTO crear(LaneRequestDTO dto) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        Pool pool = poolRepository.findById(dto.getPoolId())
+                .filter(p -> !p.isEliminado())
                 .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(pool, nitEmpresa);
         Lane lane = Lane.builder()
                 .pool(pool)
                 .nombre(dto.getNombre())
@@ -49,8 +53,14 @@ public class LaneService {
         return toDto(laneRepository.save(lane));
     }
 
+    @Deprecated
+    public LaneResponseDTO crear(String nitEmpresa, LaneRequestDTO dto) {
+        return crear(dto);
+    }
+
     @Transactional(readOnly = true)
-    public List<LaneResponseDTO> listarPorEmpresa(String nitEmpresa) {
+    public List<LaneResponseDTO> listarPorEmpresa() {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
         if (debeMostrarTodasLasLanes()) {
             return laneRepository.findAllByPool_Empresa_NitAndEliminadoFalse(nitEmpresa).stream()
                     .map(this::toDto)
@@ -67,18 +77,32 @@ public class LaneService {
                 .toList();
     }
 
+    @Deprecated
+    public List<LaneResponseDTO> listarPorEmpresa(String nitEmpresa) {
+        return listarPorEmpresa();
+    }
+
     @Transactional(readOnly = true)
-    public List<LaneResponseDTO> listarTodasPorEmpresa(String nitEmpresa) {
+    public List<LaneResponseDTO> listarTodasPorEmpresa() {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
         poolRepository.findAllByEmpresa_NitAndEliminadoFalse(nitEmpresa);
         return laneRepository.findAllByPool_Empresa_NitAndEliminadoFalse(nitEmpresa).stream()
                 .map(this::toDto)
                 .toList();
     }
 
+    @Deprecated
+    public List<LaneResponseDTO> listarTodasPorEmpresa(String nitEmpresa) {
+        return listarTodasPorEmpresa();
+    }
+
     @Transactional(readOnly = true)
-    public List<LaneResponseDTO> listarPorPool(String nitEmpresa, Long poolId) {
-        poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
+    public List<LaneResponseDTO> listarPorPool(Long poolId) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        Pool pool = poolRepository.findById(poolId)
+                .filter(p -> !p.isEliminado())
                 .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(pool, nitEmpresa);
 
         if (debeMostrarTodasLasLanes()) {
             return laneRepository.findAllByPool_IdAndEliminadoFalse(poolId).stream()
@@ -96,50 +120,67 @@ public class LaneService {
                 .toList();
     }
 
+    @Deprecated
+    public List<LaneResponseDTO> listarPorPool(String nitEmpresa, Long poolId) {
+        return listarPorPool(poolId);
+    }
+
     @Transactional(readOnly = true)
-    public List<LaneResponseDTO> listarTodasPorPool(String nitEmpresa, Long poolId) {
-        poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(poolId, nitEmpresa)
+    public List<LaneResponseDTO> listarTodasPorPool(Long poolId) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        Pool pool = poolRepository.findById(poolId)
+                .filter(p -> !p.isEliminado())
                 .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(pool, nitEmpresa);
         return laneRepository.findAllByPool_IdAndEliminadoFalse(poolId).stream()
                 .map(this::toDto)
                 .toList();
     }
 
+    @Deprecated
+    public List<LaneResponseDTO> listarTodasPorPool(String nitEmpresa, Long poolId) {
+        return listarTodasPorPool(poolId);
+    }
+
     @Transactional(readOnly = true)
+    public LaneResponseDTO obtener(Long id) {
+        return toDto(buscarPropia(id));
+    }
+
+    @Deprecated
     public LaneResponseDTO obtener(String nitEmpresa, Long id) {
-        Lane lane;
-        if (debeMostrarTodasLasLanes()) {
-            lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalse(id, nitEmpresa)
-                    .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
-        } else {
-            List<Long> rolIds = resolverRolIdsVisibles(nitEmpresa);
-            if (rolIds.isEmpty()) {
-                throw new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND);
-            }
-            lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalseAndRolProceso_IdIn(id, nitEmpresa, rolIds)
-                    .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
-        }
-        return toDto(lane);
+        return obtener(id);
     }
 
     @Transactional
-    public LaneResponseDTO actualizar(String nitEmpresa, Long id, LaneRequestDTO dto) {
-        Lane lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalse(id, nitEmpresa)
-                .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
-        Pool pool = poolRepository.findByIdAndEmpresa_NitAndEliminadoFalse(dto.getPoolId(), nitEmpresa)
+    public LaneResponseDTO actualizar(Long id, LaneRequestDTO dto) {
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        Lane lane = buscarPropia(id);
+        Pool pool = poolRepository.findById(dto.getPoolId())
+                .filter(p -> !p.isEliminado())
                 .orElseThrow(() -> new BusinessException(MSG_POOL_NO_ENCONTRADO, HttpStatus.NOT_FOUND));
+        validarPerteneceAEmpresa(pool, nitEmpresa);
         lane.setPool(pool);
         lane.setNombre(dto.getNombre());
         lane.setRolProceso(resolverRolObligatorio(nitEmpresa, dto.getRolProcesoId()));
         return toDto(laneRepository.save(lane));
     }
 
+    @Deprecated
+    public LaneResponseDTO actualizar(String nitEmpresa, Long id, LaneRequestDTO dto) {
+        return actualizar(id, dto);
+    }
+
     @Transactional
-    public void eliminar(String nitEmpresa, Long id) {
-        Lane lane = laneRepository.findByIdAndPool_Empresa_NitAndEliminadoFalse(id, nitEmpresa)
-                .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
+    public void eliminar(Long id) {
+        Lane lane = buscarPropia(id);
         lane.setEliminado(true);
         laneRepository.save(lane);
+    }
+
+    @Deprecated
+    public void eliminar(String nitEmpresa, Long id) {
+        eliminar(id);
     }
 
     private Rol resolverRolObligatorio(String nit, Long rolId) {
@@ -187,6 +228,25 @@ public class LaneService {
                 .map(Rol::getId)
                 .distinct()
                 .toList();
+    }
+
+    private Lane buscarPropia(Long id) {
+        Lane lane = laneRepository.findById(id)
+                .filter(l -> !l.isEliminado())
+                .orElseThrow(() -> new BusinessException(MSG_LANE_NO_ENCONTRADA, HttpStatus.NOT_FOUND));
+        String nitEmpresa = SecurityUtils.requireAuthenticatedNitEmpresa();
+        if (lane.getPool() == null
+                || lane.getPool().getEmpresa() == null
+                || !nitEmpresa.equals(lane.getPool().getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
+        }
+        return lane;
+    }
+
+    private void validarPerteneceAEmpresa(Pool pool, String nitEmpresa) {
+        if (pool.getEmpresa() == null || !nitEmpresa.equals(pool.getEmpresa().getNit())) {
+            throw new AccessDeniedException("El recurso no pertenece a la empresa autenticada.");
+        }
     }
 
     private LaneResponseDTO toDto(Lane l) {

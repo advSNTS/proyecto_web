@@ -20,8 +20,8 @@ public class MensajeCatchService {
     private final MensajeCatchRepository mensajeCatchRepository;
     private final ProcesoService procesoService;
 
-    public MensajeCatchResponseDTO crear(String nitEmpresa, MensajeCatchRequestDTO dto) {
-        Proceso p = procesoService.buscarVigente(dto.getProcesoId(), nitEmpresa);
+    public MensajeCatchResponseDTO crear(MensajeCatchRequestDTO dto) {
+        Proceso p = procesoService.buscarVigente(dto.getProcesoId());
         boolean iniciar = Boolean.TRUE.equals(dto.getIniciarNuevaInstancia());
         MensajeCatch m = MensajeCatch.builder()
                 .proceso(p)
@@ -33,24 +33,39 @@ public class MensajeCatchService {
         return toDto(mensajeCatchRepository.save(m));
     }
 
-    public List<MensajeCatchResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
-        procesoService.buscarVigente(procesoId, nitEmpresa);
+    @Deprecated
+    public MensajeCatchResponseDTO crear(String nitEmpresa, MensajeCatchRequestDTO dto) {
+        return crear(dto);
+    }
+
+    public List<MensajeCatchResponseDTO> listarPorProceso(Long procesoId) {
+        procesoService.buscarVigente(procesoId);
         return mensajeCatchRepository.findAllByProceso_IdAndEliminadoFalse(procesoId).stream()
                 .map(this::toDto)
                 .toList();
     }
 
-    public MensajeCatchResponseDTO obtener(String nitEmpresa, Long id) {
+    @Deprecated
+    public List<MensajeCatchResponseDTO> listarPorProceso(String nitEmpresa, Long procesoId) {
+        return listarPorProceso(procesoId);
+    }
+
+    public MensajeCatchResponseDTO obtener(Long id) {
         MensajeCatch m = buscarActivo(id);
-        procesoService.buscarVigente(m.getProceso().getId(), nitEmpresa);
+        procesoService.buscarVigente(m.getProceso().getId());
         return toDto(m);
     }
 
+    @Deprecated
+    public MensajeCatchResponseDTO obtener(String nitEmpresa, Long id) {
+        return obtener(id);
+    }
+
     @Transactional
-    public MensajeCatchResponseDTO actualizar(String nitEmpresa, Long id, MensajeCatchRequestDTO dto) {
+    public MensajeCatchResponseDTO actualizar(Long id, MensajeCatchRequestDTO dto) {
         MensajeCatch m = buscarActivo(id);
-        procesoService.buscarVigente(m.getProceso().getId(), nitEmpresa);
-        Proceso p = procesoService.buscarVigente(dto.getProcesoId(), nitEmpresa);
+        procesoService.buscarVigente(m.getProceso().getId());
+        Proceso p = procesoService.buscarVigente(dto.getProcesoId());
         m.setProceso(p);
         m.setNombreMensaje(dto.getNombreMensaje());
         m.setCorrelacionExpr(dto.getCorrelacionExpr());
@@ -58,12 +73,22 @@ public class MensajeCatchService {
         return toDto(mensajeCatchRepository.save(m));
     }
 
+    @Deprecated
+    public MensajeCatchResponseDTO actualizar(String nitEmpresa, Long id, MensajeCatchRequestDTO dto) {
+        return actualizar(id, dto);
+    }
+
     @Transactional
-    public void eliminar(String nitEmpresa, Long id) {
+    public void eliminar(Long id) {
         MensajeCatch m = buscarActivo(id);
-        procesoService.buscarVigente(m.getProceso().getId(), nitEmpresa);
+        procesoService.buscarVigente(m.getProceso().getId());
         m.setEliminado(true);
         mensajeCatchRepository.save(m);
+    }
+
+    @Deprecated
+    public void eliminar(String nitEmpresa, Long id) {
+        eliminar(id);
     }
 
     private MensajeCatch buscarActivo(Long id) {

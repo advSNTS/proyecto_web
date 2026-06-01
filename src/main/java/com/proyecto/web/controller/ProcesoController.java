@@ -6,13 +6,9 @@ import com.proyecto.web.dto.ProcesoCompartidoRequestDTO;
 import com.proyecto.web.dto.ProcesoCompartidoResponseDTO;
 import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
-import com.proyecto.web.exception.BusinessException;
-import com.proyecto.web.security.UsuarioPrincipal;
 import com.proyecto.web.service.ProcesoCompartidoService;
 import com.proyecto.web.service.ProcesoService;
-import com.proyecto.web.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,96 +37,61 @@ public class ProcesoController {
 
     @GetMapping
     public ResponseEntity<List<ProcesoResponseDTO>> obtenerTodos(
-            @RequestParam(required = false) String nitEmpresa,
             @RequestParam(required = false) Long poolId) {
-        return ResponseEntity.ok(procesoService.obtenerProcesos(requerirNit(nitEmpresa), poolId));
+        return ResponseEntity.ok(procesoService.obtenerProcesos(poolId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProcesoResponseDTO> obtenerPorId(
-            @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(procesoService.obtenerProceso(id, requerirNit(nitEmpresa)));
+    public ResponseEntity<ProcesoResponseDTO> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(procesoService.obtenerProceso(id));
     }
 
     @GetMapping("/{id}/detalle")
-    public ResponseEntity<ProcesoResponseDTO> obtenerDetalleRapido(
-            @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(procesoService.obtenerDetalleProcesoRapido(id, requerirNit(nitEmpresa)));
+    public ResponseEntity<ProcesoResponseDTO> obtenerDetalleRapido(@PathVariable Long id) {
+        return ResponseEntity.ok(procesoService.obtenerDetalleProcesoRapido(id));
     }
 
     @GetMapping("/categoria/{categoria}")
-    public ResponseEntity<List<ProcesoResponseDTO>> obtenerPorCategoria(
-            @PathVariable String categoria,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(procesoService.obtenerPorCategoria(categoria, requerirNit(nitEmpresa)));
+    public ResponseEntity<List<ProcesoResponseDTO>> obtenerPorCategoria(@PathVariable String categoria) {
+        return ResponseEntity.ok(procesoService.obtenerPorCategoria(categoria));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProcesoResponseDTO> actualizar(
             @PathVariable Long id,
-            @RequestBody ProcesoRequestDTO dto,
-            @RequestParam(required = false) Long idEmpleado,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(
-                procesoService.actualizarProceso(id, dto, idEmpleado, requerirNit(nitEmpresa)));
+            @RequestBody ProcesoRequestDTO dto) {
+        return ResponseEntity.ok(procesoService.actualizarProceso(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long idEmpleado,
-            @RequestParam(required = false) String nitEmpresa) {
-        procesoService.eliminarProceso(id, idEmpleado, requerirNit(nitEmpresa));
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        procesoService.eliminarProceso(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/historial")
     public ResponseEntity<List<HistorialProcesoResponseDTO>> historial(
             @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa,
             @RequestParam(required = false) Integer limite) {
-        return ResponseEntity.ok(
-                procesoService.obtenerHistorialProcesoParaEmpresa(id, requerirNit(nitEmpresa), limite));
+        return ResponseEntity.ok(procesoService.obtenerHistorialProcesoParaEmpresa(id, limite));
     }
 
     @GetMapping("/{id}/historial/resumen")
     public ResponseEntity<HistorialProcesoResumenDTO> resumenHistorial(
             @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa,
             @RequestParam(required = false) Integer limite) {
-        return ResponseEntity.ok(
-                procesoService.obtenerResumenHistorialProceso(id, requerirNit(nitEmpresa), limite));
+        return ResponseEntity.ok(procesoService.obtenerResumenHistorialProceso(id, limite));
     }
 
     @PostMapping("/{id}/compartir")
     public ResponseEntity<ProcesoCompartidoResponseDTO> compartir(
             @PathVariable Long id,
-            @RequestBody ProcesoCompartidoRequestDTO dto,
-            @RequestParam(required = false) String nitEmpresa) {
-        Long empleadoId = SecurityUtils.currentUser().map(UsuarioPrincipal::getEmpleadoId).orElse(null);
-        return ResponseEntity.ok(
-                procesoCompartidoService.compartir(id, dto, empleadoId, requerirNit(nitEmpresa)));
+            @RequestBody ProcesoCompartidoRequestDTO dto) {
+        return ResponseEntity.ok(procesoCompartidoService.compartir(id, dto));
     }
 
     @GetMapping("/{id}/compartidos")
-    public ResponseEntity<List<ProcesoCompartidoResponseDTO>> listarCompartidos(
-            @PathVariable Long id,
-            @RequestParam(required = false) String nitEmpresa) {
-        return ResponseEntity.ok(
-                procesoCompartidoService.listarPorProceso(requerirNit(nitEmpresa), id));
-    }
-
-    private String requerirNit(String nitEmpresa) {
-        String nit = SecurityUtils.resolverNitEmpresa(nitEmpresa);
-
-        if (nit == null || nit.isBlank()) {
-            throw new BusinessException(
-                    "nitEmpresa es obligatorio (query param o token JWT)",
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        return nit;
+    public ResponseEntity<List<ProcesoCompartidoResponseDTO>> listarCompartidos(@PathVariable Long id) {
+        return ResponseEntity.ok(procesoCompartidoService.listarPorProceso(id));
     }
 }

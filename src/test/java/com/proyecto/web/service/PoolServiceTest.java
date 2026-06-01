@@ -7,6 +7,7 @@ import com.proyecto.web.entity.Pool;
 import com.proyecto.web.exception.BusinessException;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.PoolRepository;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ class PoolServiceTest {
         empresa.setNombre("Empresa Test");
         empresa.setDeleted(false);
         empresaRepository.save(empresa);
+        TestSecurityContext.authenticate(nitEmpresa);
     }
 
     @Test

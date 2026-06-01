@@ -6,6 +6,7 @@ import com.proyecto.web.entity.Empresa;
 import com.proyecto.web.entity.Pool;
 import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.PoolRepository;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,7 @@ class PoolControllerTest {
         empresa.setNombre("Empresa Test");
         empresa.setDeleted(false);
         empresaRepository.save(empresa);
+        TestSecurityContext.authenticate(nitEmpresa);
     }
 
     @Test
@@ -103,7 +105,7 @@ class PoolControllerTest {
     void testListarPools_NitNulo() throws Exception {
         mockMvc.perform(get("/api/pools")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -215,7 +217,7 @@ class PoolControllerTest {
         mockMvc.perform(post("/api/pools")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isOk());
     }
 
     @Test

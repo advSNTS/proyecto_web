@@ -10,6 +10,7 @@ import com.proyecto.web.repository.EmpresaRepository;
 import com.proyecto.web.repository.LaneRepository;
 import com.proyecto.web.repository.PoolRepository;
 import com.proyecto.web.repository.RolRepository;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,7 @@ class LaneControllerTest {
         empresa.setNombre("Empresa Test");
         empresa.setDeleted(false);
         empresaRepository.save(empresa);
+        TestSecurityContext.authenticate(nitEmpresa);
 
         // Crear rol
         rol = new Rol();
@@ -115,7 +117,7 @@ class LaneControllerTest {
         mockMvc.perform(post("/api/lanes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -185,7 +187,7 @@ class LaneControllerTest {
     void testListarLanes_NitNulo() throws Exception {
         mockMvc.perform(get("/api/lanes")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isOk());
     }
 
     @Test

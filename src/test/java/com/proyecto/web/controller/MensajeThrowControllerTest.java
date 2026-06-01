@@ -9,6 +9,7 @@ import com.proyecto.web.repository.ProcesoRepository;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.support.IntegrationTestData;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,8 +84,10 @@ class MensajeThrowControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/mensajes-throw - Fallar si nit es nulo")
-    void testCrearMensajeThrow_NitNulo() throws Exception {
+    @DisplayName("POST /api/mensajes-throw - Fallar sin autenticación")
+    void testCrearMensajeThrow_SinAutenticacion() throws Exception {
+        TestSecurityContext.clear();
+        
         MensajeThrowRequestDTO request = MensajeThrowRequestDTO.builder()
                 .procesoId(proceso.getId())
                 .nombreMensaje("Mensaje Throw 1")

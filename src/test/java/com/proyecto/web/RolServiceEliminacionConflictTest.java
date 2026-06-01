@@ -18,6 +18,7 @@ import com.proyecto.web.service.NodoService;
 import com.proyecto.web.service.ProcesoService;
 import com.proyecto.web.service.RequiereService;
 import com.proyecto.web.service.RolService;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,8 @@ class RolServiceEliminacionConflictTest {
 
     @BeforeEach
     void setUp() {
+        TestSecurityContext.authenticate(NIT);
+        
         EmpresaRequestDTO empresaDTO = new EmpresaRequestDTO();
         empresaDTO.setNit(NIT);
         empresaDTO.setNombre("Empresa");

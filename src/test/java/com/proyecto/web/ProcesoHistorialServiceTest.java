@@ -6,6 +6,7 @@ import com.proyecto.web.dto.ProcesoRequestDTO;
 import com.proyecto.web.dto.ProcesoResponseDTO;
 import com.proyecto.web.service.EmpresaService;
 import com.proyecto.web.service.ProcesoService;
+import com.proyecto.web.support.TestSecurityContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,7 @@ class ProcesoHistorialServiceTest {
         emp.setNombre("Empresa Historial Test");
         emp.setCorreo("hist@test.com");
         empresaService.crearEmpresa(emp);
+        TestSecurityContext.authenticate(NIT);
     }
 
     @Test

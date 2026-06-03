@@ -16,7 +16,8 @@ public interface GatewayRepository extends JpaRepository<Gateway, Long> {
  
     // Filtrar por tipo dentro de un proceso
     List<Gateway> findAllByNodo_Proceso_IdAndTipoGatewayAndDeletedFalse(Long procesoId, TipoGateway tipoGateway);
- 
-    // Validar que el nodo no tenga ya un gateway asignado
+
+    List<Gateway> findAllByNodo_Proceso_Empresa_NitAndDeletedFalse(String nit);
+
     boolean existsByNodo_IdAndDeletedFalse(Long nodoId);
 }

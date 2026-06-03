@@ -68,4 +68,16 @@ public interface HistorialProcesoRepository extends JpaRepository<HistorialProce
             @Param("idProceso") Long idProceso,
             @Param("nitEmpresa") String nitEmpresa,
             Pageable pageable);
+
+    @Query("""
+            select h
+            from HistorialProceso h
+            join fetch h.proceso p
+            left join fetch h.empleado e
+            where p.empresa.nit = :nitEmpresa
+            order by h.fechaCambio desc
+            """)
+    List<HistorialProceso> findRecientesPorEmpresa(
+            @Param("nitEmpresa") String nitEmpresa,
+            Pageable pageable);
 }

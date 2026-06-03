@@ -36,4 +36,8 @@ public interface ProcesoRepository extends JpaRepository<Proceso, Long> {
 
     @EntityGraph(attributePaths = {"empresa", "pool"})
     Optional<Proceso> findByIdAndEmpresa_NitAndEstadoNot(Long id, String nit, EstadoProceso estado);
+
+    long countByEmpresa_Nit(String nit);
+
+    long countByEmpresa_NitAndEstado(String nit, EstadoProceso estado);
 }

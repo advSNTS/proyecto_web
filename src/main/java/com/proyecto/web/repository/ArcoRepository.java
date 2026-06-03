@@ -26,5 +26,7 @@ public interface ArcoRepository extends JpaRepository<Arco, Long> {
     List<Arco> findAllByProceso_IdAndEliminadoFalse(Long idProceso);
 
     List<Arco> findAllByNodoOrigen_IdOrNodoDestino_IdAndEliminadoFalse(Long origenId, Long destinoId);
+
+    List<Arco> findAllByProceso_Empresa_NitAndEliminadoFalse(String nit);
 }
  

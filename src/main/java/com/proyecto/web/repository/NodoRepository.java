@@ -13,6 +13,8 @@ public interface NodoRepository extends JpaRepository<Nodo, Long> {
 
     List<Nodo> findAllByProceso_IdAndTipoAndEliminadoFalse(Long idProceso, TipoNodo tipo);
 
+    List<Nodo> findAllByProceso_Empresa_NitAndEliminadoFalse(String nit);
+
     Optional<Nodo> findByIdAndEliminadoFalse(Long id);
 }
  

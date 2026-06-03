@@ -13,4 +13,6 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     Optional<Empleado> findByIdAndDeletedFalse(Long id);
 
     List<Empleado> findAllByEmpresa_NitAndDeletedFalse(String nit);
+
+    long countByEmpresa_NitAndDeletedFalse(String nit);
 }

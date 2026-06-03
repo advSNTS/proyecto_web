@@ -14,8 +14,9 @@ public interface ActividadRepository extends JpaRepository<Actividad, Long> {
  
     // Todas las actividades activas de un proceso (navegando por el nodo)
     List<Actividad> findAllByNodo_Proceso_IdAndDeletedFalse(Long procesoId);
- 
-    // Validar que el nodo no tenga ya una actividad asignada
+
+    List<Actividad> findAllByNodo_Proceso_Empresa_NitAndDeletedFalse(String nit);
+
     boolean existsByNodo_IdAndDeletedFalse(Long nodoId);
 }
  
